@@ -1,0 +1,624 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/apartment_structure/protos/Door.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/GlossyPaint.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/tables/protos/Table.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/CardboardBox.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/apartment_structure/protos/Wall.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/Roughcast.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/cabinet/protos/Cabinet.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/hospital/protos/EmergencyExitSign.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/husarion/rosbot/protos/Rosbot.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/CarpetFibers.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/apartment_structure/protos/Window.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/chairs/protos/OfficeChair.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/computers/protos/Monitor.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/computers/protos/Laptop.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/computers/protos/Keyboard.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/computers/protos/DesktopComputer.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/computers/protos/ComputerMouse.proto"
+
+WorldInfo {
+  info [
+    "ROSbot robot (Husarion)."
+    "The ROSbot avoids obstacles using its distance sensors."
+  ]
+  title "ROSbot"
+  lineScale 0.15
+}
+Viewpoint {
+  orientation 0.1336198810158717 0.3568305491181132 -0.9245635114005799 0.7696250777392638
+  position -0.5375822526649872 -2.9628782014437167 0.8149990172036142
+  follow "Rosbot"
+}
+TexturedBackground {
+  texture "empty_office"
+  luminosity 1.6
+  skybox FALSE
+  skyColor [
+    0.5 0.5 0.5
+  ]
+}
+Floor {
+  translation 0 -4.3 0
+  size 12 10
+  tileSize 1 1
+  appearance CarpetFibers {
+    colorOverride 0.6 0.6 0.6
+  }
+}
+Wall {
+  translation 0 0.79 0
+  name "wall(1)"
+  size 12 0.2 3
+  appearance Roughcast {
+    textureTransform TextureTransform {
+      scale 5 1.75
+    }
+  }
+}
+Wall {
+  translation 0 -9.4 0
+  name "wall(2)"
+  size 12 0.2 3
+  appearance Roughcast {
+    textureTransform TextureTransform {
+      scale 5 1.75
+    }
+  }
+}
+Wall {
+  translation 5.9 0.485 0
+  rotation 0 0 1 1.5708
+  name "wall(3)"
+  size 0.41 0.2 3
+  appearance Roughcast {
+    textureTransform TextureTransform {
+      scale 4.125 1.725
+    }
+  }
+}
+Wall {
+  translation 5.9 -2.635 0
+  rotation 0 0 1 1.5708
+  name "wall(4)"
+  size 2.23 0.2 3
+  appearance Roughcast {
+    textureTransform TextureTransform {
+      scale 4.125 1.725
+    }
+  }
+}
+Wall {
+  translation 5.9 -5.818 0
+  rotation 0 0 1 1.5708
+  name "wall(5)"
+  size 2.34 0.2 3
+  appearance Roughcast {
+    textureTransform TextureTransform {
+      scale 4.125 1.725
+    }
+  }
+}
+Wall {
+  translation 5.9 -9.048 0
+  rotation 0 0 1 1.5708
+  name "wall(6)"
+  size 0.52 0.2 3
+  appearance Roughcast {
+    textureTransform TextureTransform {
+      scale 4.125 1.725
+    }
+  }
+}
+Wall {
+  translation -5.89 -4.298 0
+  rotation 0 0 1 1.5708
+  name "wall(7)"
+  size 10 0.2 3
+  appearance Roughcast {
+    textureTransform TextureTransform {
+      scale 4.125 1.725
+    }
+  }
+}
+Door {
+  hidden translation_5 0.0010710394270503354 2.2278111943607737e-05 1.1102230246251565e-16
+  hidden rotation_5 0 0 -1 0.00014955318208720845
+  hidden linearVelocity_5 -1.3052429329327873e-18 7.41574803427525e-20 -2.5701841283242677e-15
+  hidden angularVelocity_5 1.7073532276299817e-23 3.03627559789436e-18 2.665820241831482e-18
+  translation -5.93 0 0.01
+  position -0.00014955318112974314
+  doorAppearance GlossyPaint {
+    baseColor 0.16 0.16 0.16
+  }
+  frameAppearance GlossyPaint {
+    baseColor 0.35 0.3503166247043564 0.35
+  }
+}
+EmergencyExitSign {
+  translation -5.66 -0.00997861 2.3
+  rotation 0.5773489358550934 0.5773519358547601 0.5773499358549823 2.0944
+  name "emergency exit sign(1)"
+}
+Window {
+  translation 5.9 -8.34 0
+  size 0.2 0.9 3
+  bottomWallHeight 0
+  windowHeight 2.1
+  frameAppearance GlossyPaint {
+    baseColor 0.2 0.2 0.2
+  }
+}
+Window {
+  translation 5.9 -7.44 0
+  name "window(1)"
+  size 0.2 0.9 3
+  bottomWallHeight 0
+  windowHeight 2.1
+  frameAppearance GlossyPaint {
+    baseColor 0.2 0.2 0.2
+  }
+}
+Window {
+  translation 5.9 -4.2 0
+  name "window(2)"
+  size 0.2 0.9 3
+  bottomWallHeight 0
+  windowHeight 2.1
+  frameAppearance GlossyPaint {
+    baseColor 0.2 0.2 0.2
+  }
+}
+Window {
+  translation 5.9 -0.17 0
+  name "window(3)"
+  size 0.2 0.9 3
+  bottomWallHeight 0
+  windowHeight 2.1
+  frameAppearance GlossyPaint {
+    baseColor 0.2 0.2 0.2
+  }
+}
+Window {
+  translation 5.9 -1.07 0
+  name "window(4)"
+  size 0.2 0.9 3
+  bottomWallHeight 0
+  windowHeight 2.1
+  frameAppearance GlossyPaint {
+    baseColor 0.2 0.2 0.2
+  }
+}
+Table {
+  translation -2.34143 -2.34764 -2.66454e-15
+  size 4.5 1 0.74
+}
+Table {
+  translation 2.16466 -2.34758 -1.77636e-15
+  name "table(1)"
+  size 4.5 1 0.74
+}
+Table {
+  translation -2.34143 -6.04764 -2.66454e-15
+  name "table(2)"
+  size 4.5 1 0.74
+}
+Table {
+  translation 2.16466 -6.04758 -1.77636e-15
+  name "table(3)"
+  size 4.5 1 0.74
+}
+CardboardBox {
+  translation -5.47816 -8.97263 0.31
+  rotation 0 0 -1 1.5708
+}
+CardboardBox {
+  translation -4.84275 -8.94061 0.31
+  rotation 0 0 -1 1.5708
+  name "cardboard box(1)"
+}
+CardboardBox {
+  translation -5.44685 -8.30471 0.31
+  rotation 0 0 -1 1.5
+  name "cardboard box(2)"
+}
+CardboardBox {
+  translation -5.3088 -8.77372 0.91
+  rotation 0 0 1 -1.8325953071795862
+  name "cardboard box(3)"
+}
+Cabinet {
+  hidden position_6_0 1.6009139608415877e-05
+  hidden translation_7 -7.96454695484669e-06 -6.375283634341145e-11 0
+  hidden rotation_7 0 0 1 1.6009146285484325e-05
+  hidden linearVelocity_7 -1.734870101885512e-15 -3.3487575045817456e-16 -8.165352985530433e-16
+  hidden angularVelocity_7 -1.883689013257324e-18 2.103631467727479e-17 2.1416641862068424e-17
+  hidden position_10_0 -1.6009139607700802e-05
+  hidden translation_11 -7.96454695449094e-06 6.375283634341145e-11 0
+  hidden rotation_11 0 0 -1 1.6009146285484325e-05
+  hidden linearVelocity_11 2.7755474483092585e-15 -9.318448119486587e-19 -1.0049665212960536e-15
+  hidden angularVelocity_11 -2.0278956444784324e-18 -4.055761200527556e-17 1.6534600530341977e-18
+  translation 1.49 0.63 0
+  rotation 0 0 1 -1.5707953071795862
+  columnsWidths [
+    1, 1
+  ]
+  layout [
+    "RightSidedDoor (1, 1, 1, 5, 1.5)"
+    "LeftSidedDoor (2, 1, 1, 5, 1.5)"
+  ]
+}
+Cabinet {
+  translation -0.460035 0.63 0
+  rotation 0 0 1 -1.5707953071795862
+  name "cabinet(1)"
+  columnsWidths [
+    1.3, 0.17, 0.17
+  ]
+  layout [
+    "Shelf (1, 5, 3, 0)"
+    "Shelf (1, 4, 3, 0)"
+    "Shelf (1, 3, 3, 0)"
+    "Shelf (1, 2, 3, 0)"
+  ]
+}
+OfficeChair {
+  hidden position_0_0 4.590200641964475e-05
+  hidden linearVelocity_0 -1.6242388674440427e-07 -0.00012012772540896326 -0.00037738858027231895
+  hidden angularVelocity_0 0.0001857161090084842 2.960801729936178e-07 -1.3768800342040431e-06
+  hidden rotation_1 0 0 1 4.5902010619387966e-05
+  hidden linearVelocity_1 2.2047099302443157e-07 -0.00010226672930964752 -0.00012641636870353067
+  hidden angularVelocity_1 0.00021582664118912416 3.4548049859724743e-07 2.8036809396300233e-08
+  translation -1.0424012615943425 -6.725475584629118 -0.005386287532487488
+  rotation 0.006324288159613438 -0.0063188492657910164 0.9999600369630931 1.5708318121883773
+}
+OfficeChair {
+  hidden position_0_0 -0.00017945121762341643
+  hidden linearVelocity_0 -3.2565827780892064e-06 -1.1769558296567196e-05 -7.729707314456369e-05
+  hidden angularVelocity_0 8.272504714979253e-05 -2.288968810114938e-05 -7.730057710425598e-11
+  hidden rotation_1 0 0 -1 0.00017945121666780516
+  hidden linearVelocity_1 -1.537393155067008e-05 -4.788452644519621e-05 -8.494765696847685e-05
+  hidden angularVelocity_1 8.273629838224063e-05 -2.2858598955858222e-05 -2.3671852605973145e-05
+  translation -0.8929879866831579 -3.465679959644122 -0.0014055149772527753
+  rotation 0.0006906853372919204 -0.000914098407437592 0.9999993436887178 1.309005930664701
+  name "office chair(1)"
+}
+OfficeChair {
+  hidden position_0_0 -1.122335487035997e-05
+  hidden linearVelocity_0 -4.1587018286028145e-07 -2.8638733877154243e-05 -0.000449207085586674
+  hidden angularVelocity_0 7.296795549426545e-05 -2.347560919160258e-06 2.9036343238672414e-07
+  hidden rotation_1 0 0 -1 1.1223374181477753e-05
+  hidden linearVelocity_1 -1.970133733954752e-06 -4.577358989470784e-05 -0.000431441970425984
+  hidden angularVelocity_1 7.48800131834454e-05 -2.211930309357425e-06 -8.027001997327284e-06
+  translation -2.1634005576555637 -3.038550544474501 -0.0004775897876863888
+  rotation 0.005756518553720774 -0.0057548209996310575 0.9999668717159598 1.570835831191484
+  name "office chair(2)"
+}
+OfficeChair {
+  hidden position_0_0 0.001239976740261621
+  hidden linearVelocity_0 6.018614041417439e-06 -4.8592045030801406e-05 -0.0002981624858609095
+  hidden angularVelocity_0 0.00034154078140108233 4.23030986662784e-05 -1.1150193719180106e-10
+  hidden rotation_1 0 0 1 0.0012399767401403948
+  hidden linearVelocity_1 2.3325269246279356e-05 -0.00020015144524168182 -0.00032894892409115095
+  hidden angularVelocity_1 0.00034156847282037725 4.232945876507741e-05 -1.6815319358944272e-05
+  translation 0.6939468715652389 -6.855400308680319 -0.0013774524120856724
+  rotation 0.00067792313441328 -0.0006028867089925953 0.9999995884738353 1.6999999034641486
+  name "office chair(3)"
+}
+OfficeChair {
+  hidden position_0_0 0.0019224906104650234
+  hidden linearVelocity_0 -1.39153893770238e-07 -2.4457769428130723e-05 -0.00015181262203195026
+  hidden angularVelocity_0 0.0001719070772747457 -9.781620186726277e-07 -1.0363308233987356e-10
+  hidden rotation_1 0 0 0.9999999999999999 0.0019224906104302023
+  hidden linearVelocity_1 -2.444413621286146e-06 -0.00010063147159901894 -0.00016716483603647676
+  hidden angularVelocity_1 0.00017191759861221476 -9.48372070401111e-07 -2.1640309958499916e-05
+  translation 2.3354988336021103 -3.0467200368436447 -0.0013960494284592784
+  rotation 0.0006883893904226396 -0.0006959109226582114 0.9999995209139027 1.5708006088379995
+  name "office chair(4)"
+}
+OfficeChair {
+  hidden position_0_0 0.0012399767402609546
+  hidden linearVelocity_0 -2.921898668151969e-07 -4.8962487481032866e-05 -0.0002981624858608334
+  hidden angularVelocity_0 0.0003441445031514414 -2.053890825953769e-06 -1.1150183858491876e-10
+  hidden rotation_1 0 0 1 0.0012399767401403948
+  hidden linearVelocity_1 -2.656822929747468e-06 -0.00020148848728873757 -0.0003289489240913776
+  hidden angularVelocity_1 0.00034417536002739424 -2.031318218150849e-06 -1.6815319357792856e-05
+  translation 2.211198841199786 -6.808330160719059 -0.0013774524120856724
+  rotation 0.0006774192532306336 -0.000685709559829762 0.9999995354526695 1.5707999599154727
+  name "office chair(5)"
+}
+OfficeChair {
+  hidden position_0_0 -0.00013723472675764015
+  hidden linearVelocity_0 3.06491707609464e-06 -1.1820913967731838e-05 -7.729707057031502e-05
+  hidden angularVelocity_0 8.308603583821667e-05 2.1542433684854364e-05 -7.737242268724319e-11
+  hidden rotation_1 0 0 -1 0.00013723472747864007
+  hidden linearVelocity_1 1.0629216301747632e-05 -4.915594575775195e-05 -8.494765710103482e-05
+  hidden angularVelocity_1 8.308023149423563e-05 2.1574992506798116e-05 -2.3678854805539536e-05
+  translation 3.717689981633365 -3.451079925841104 -0.0014055150280017914
+  rotation 0.0006934848439710308 -0.0005403186534407776 0.9999996135671873 1.8326003756910447
+  name "office chair(6)"
+}
+OfficeChair {
+  hidden position_0_0 -0.0001372347267549756
+  hidden linearVelocity_0 3.0649170761263415e-06 -1.1820913967627816e-05 -7.7297070570543e-05
+  hidden angularVelocity_0 8.308603583735604e-05 2.1542433684749623e-05 -7.737244022980838e-11
+  hidden rotation_1 0 0 -1 0.00013723472747864007
+  hidden linearVelocity_1 1.0629216301876414e-05 -4.915594575986809e-05 -8.494765710065618e-05
+  hidden angularVelocity_1 8.30802314927964e-05 2.15749925075837e-05 -2.3678854804154966e-05
+  translation 3.625199981633364 -6.876649925841105 -0.0014055150280017636
+  rotation 0.0006934848439710522 -0.0005403186534407675 0.9999996135671873 1.8326003756910445
+  name "office chair(7)"
+}
+OfficeChair {
+  hidden position_0_0 -0.00013723472675319925
+  hidden linearVelocity_0 -3.256112882460008e-06 -1.1769683624136536e-05 -7.729707057023889e-05
+  hidden angularVelocity_0 8.272592801817613e-05 -2.288638533696602e-05 -7.737236392617502e-11
+  hidden rotation_1 0 0 -1 0.00013723472747864007
+  hidden linearVelocity_1 -1.5372606036825346e-05 -4.7884968680053885e-05 -8.494765710095924e-05
+  hidden angularVelocity_1 8.273718059383498e-05 -2.28552863520398e-05 -2.367885480126841e-05
+  translation -3.967639978826827 -6.868899926593107 -0.0014055150280017914
+  rotation 0.0006907217406872115 -0.0009140703960967063 0.9999993436891785 1.3090059435548307
+  name "office chair(8)"
+}
+OfficeChair {
+  hidden position_0_0 -0.00013723472675675197
+  hidden linearVelocity_0 -3.2561128825520647e-06 -1.1769683624037076e-05 -7.729707057061877e-05
+  hidden angularVelocity_0 8.272592801749598e-05 -2.288638533782229e-05 -7.737247449587775e-11
+  hidden rotation_1 0 0 -1 0.00013723472747864007
+  hidden linearVelocity_1 -1.537260603932222e-05 -4.78849686887091e-05 -8.494765710054299e-05
+  hidden angularVelocity_1 8.273718059457927e-05 -2.285528635168581e-05 -2.367885479698214e-05
+  translation -4.035959978826823 -3.2605499265931073 -0.0014055150280017636
+  rotation 0.0006907217406871718 -0.000914070396096693 0.9999993436891786 1.3090059435548307
+  name "office chair(9)"
+}
+Monitor {
+  translation 4.01419 -5.99474 0.75
+  rotation 0 0 1 -1.5707953071795862
+}
+Monitor {
+  translation -0.793499 -6.0768 0.75
+  rotation 0 0 1 -1.8325953071795862
+  name "monitor(1)"
+}
+Monitor {
+  translation 3.54046 -5.98933 0.75
+  rotation 0 0 -1 1.5708
+  name "monitor(2)"
+}
+Monitor {
+  translation -3.48822 -2.38037 0.75
+  rotation 0 0 1 -1.8325953071795862
+  name "monitor(3)"
+}
+Monitor {
+  translation -3.9701 -2.30917 0.75
+  rotation 0 0 1 -1.5707953071795862
+  name "monitor(4)"
+}
+Monitor {
+  translation -3.92507 -6.04569 0.75
+  rotation 0 0 1 -1.5707953071795862
+  name "monitor(5)"
+}
+Monitor {
+  translation -1.29756 -6.00979 0.75
+  rotation 0 0 1 -1.5707953071795862
+  name "monitor(6)"
+}
+Monitor {
+  translation 1.05083 -2.32986 0.75
+  rotation 0 0 1 -1.5707953071795862
+  name "monitor(7)"
+}
+Monitor {
+  translation 2.11387 -6.09458 0.75
+  rotation 0 0 1 -1.5707953071795862
+  name "monitor(8)"
+}
+Monitor {
+  translation 2.27403 -2.3651 0.75
+  rotation 0 0 1 -1.5707953071795862
+  name "monitor(9)"
+}
+Monitor {
+  translation -0.736172 -2.18149 0.75
+  rotation 0 0 1 -1.5707953071795862
+  name "monitor(10)"
+}
+Keyboard {
+  translation -1.04384 -6.33925 0.74
+  rotation 0 0 -1 1.57
+}
+Keyboard {
+  translation 3.82957 -6.30281 0.74
+  rotation 0 0 1 -1.65
+  name "keyboard(1)"
+}
+Keyboard {
+  translation 2.16808 -6.33254 0.74
+  rotation 0 0 -1 1.3882
+  name "keyboard(2)"
+}
+Keyboard {
+  translation -3.81557 -6.26869 0.74
+  rotation 0 0 1 -1.65
+  name "keyboard(3)"
+}
+Keyboard {
+  translation -3.79139 -2.63274 0.74
+  rotation 0 0 1 -1.52
+  name "keyboard(4)"
+}
+Keyboard {
+  translation -0.743796 -2.5728 0.74
+  rotation 0 0 1 -1.65
+  name "keyboard(5)"
+}
+Keyboard {
+  translation 1.05253 -2.60964 0.74
+  rotation 0 0 1 -1.5
+  name "keyboard(6)"
+}
+Keyboard {
+  translation 2.28877 -2.68135 0.74
+  rotation 0 0 1 -1.5707953071795862
+  name "keyboard(7)"
+}
+ComputerMouse {
+  hidden linearVelocity_0 3.121607346857456e-17 -2.7286649687649312e-17 -2.197440181127201
+  hidden angularVelocity_0 -4.36876610645165e-16 4.554763691084573e-15 -8.819568822512656e-17
+  translation -0.44480168195396813 -2.5414399950864905 0.4586884226062256
+  rotation -1.8365958402412243e-06 -1.8366025510278072e-06 0.9999999999966268 1.5707999807841728
+}
+ComputerMouse {
+  hidden linearVelocity_0 -3.599316796894029e-05 -2.3482530264850926e-05 6.48727315071479e-05
+  hidden angularVelocity_0 0.0015654991117919567 -0.002399540114640734 -4.527105691550638e-08
+  translation 1.3363800664212413 -2.607096528307158 -4.753911384583649e-05
+  rotation 0.00010260689249995907 0.00017547109831918644 0.9999999793408595 2.213227705960625
+  name "computer mouse(1)"
+}
+ComputerMouse {
+  hidden linearVelocity_0 -6.44509399019488e-18 2.6450390818986663e-17 0.004428783771121597
+  hidden angularVelocity_0 -2.1560599223215654e-15 7.608888607899149e-16 -6.121255403682501e-16
+  translation 2.6112899048140954 -2.6011531438580064 0.7393940141106942
+  rotation -2.3930530842007795e-06 -1.8366025516382334e-06 0.9999999999954501 1.3091801617752288
+  name "computer mouse(2)"
+}
+ComputerMouse {
+  hidden linearVelocity_0 -1.2135476472147027e-15 -1.0699975730019008e-15 0.02182893987217798
+  hidden angularVelocity_0 7.082762370694734e-14 -7.956752923184262e-14 -3.817717110617032e-16
+  translation 4.017727321844608 -2.5868699833702435 -0.0028326280083751064
+  rotation -1.836577599497333e-06 -1.8366025420206295e-06 0.999999999996627 1.5708099123659431
+  name "computer mouse(3)"
+}
+ComputerMouse {
+  hidden linearVelocity_0 -3.580795557979454e-17 2.3458259807808418e-17 -0.9417600741752064
+  hidden angularVelocity_0 -1.310595211796471e-15 -1.708027729121957e-15 -3.396118482902918e-16
+  translation -3.5004226819539705 -2.6330799950864905 0.6796881223713865
+  rotation -1.836595840992534e-06 -1.8366025516905808e-06 0.9999999999966268 1.570799980784173
+  name "computer mouse(4)"
+}
+ComputerMouse {
+  translation -4.10896268195397 -6.340139995086491 0.739960766074454
+  rotation -1.8365958406398223e-06 -1.8366025518187585e-06 0.9999999999966269 1.5707999807841735
+  name "computer mouse(5)"
+}
+ComputerMouse {
+  hidden linearVelocity_0 0.20552347133544724 -0.2807285616258487 -0.05339284562990404
+  hidden angularVelocity_0 7.655458334426376 4.124260584775217 1.0882272303366323
+  translation 4.566362712123781 -6.7823466442205795 0.01570642539612449
+  rotation -0.14714616592114105 -0.4500291079237539 0.8808074749206313 2.1758582933171344
+  name "computer mouse(6)"
+}
+ComputerMouse {
+  translation 2.4807551509917714 -6.320756436172048 0.7399607660744549
+  rotation -3.1800919574083434e-06 -1.8366025517066128e-06 0.999999999993257 1.047469033359333
+  name "computer mouse(7)"
+}
+ComputerMouse {
+  hidden linearVelocity_0 3.485881654052961e-17 -5.863976568377379e-18 0.00016092133553514536
+  hidden angularVelocity_0 -9.829528199842165e-16 1.5657049073021788e-15 -9.208936955430172e-17
+  translation -0.7447286819539678 -6.340649995086491 -5.9832900827240174e-05
+  rotation -1.8365958407952262e-06 -1.8366025518018744e-06 0.9999999999966268 1.5707999807841726
+  name "computer mouse(8)"
+}
+DesktopComputer {
+  translation -0.331259 -2.55333 -4.44089e-15
+  rotation 0 0 -1 1.5708
+}
+DesktopComputer {
+  translation 1.93915 -2.60581 3.55272e-15
+  rotation 0 0 -1 1.5708
+  name "desktop computer(1)"
+}
+DesktopComputer {
+  translation -0.34278 -6.30435 8.88183e-16
+  rotation 0 0 -1 1.5708
+  name "desktop computer(2)"
+}
+DesktopComputer {
+  translation -4.28278 -6.30435 8.88183e-16
+  rotation 0 0 -1 1.5708
+  name "desktop computer(3)"
+}
+DesktopComputer {
+  translation 1.98224 -6.23348 8.88183e-16
+  rotation 0 0 -1 1.5708
+  name "desktop computer(4)"
+}
+DesktopComputer {
+  translation 4.12074 -6.25205 2.66454e-15
+  rotation 0 0 -1 1.5708
+  name "desktop computer(5)"
+}
+DesktopComputer {
+  translation 0.166891 -2.55871 -1.77635e-15
+  rotation 0 0 -1 1.5708
+  name "desktop computer(6)"
+}
+DesktopComputer {
+  translation -4.33071 -2.54 -4.44089e-15
+  rotation 0 0 -1 1.5708
+  name "desktop computer(7)"
+}
+Laptop {
+  hidden position_0_0 2.1374367602811234e-05
+  hidden linearVelocity_0 6.459697806780577e-09 2.2844195179985987e-08 -9.183318172168728e-07
+  hidden angularVelocity_0 -2.286896824358737e-06 6.466529564945057e-07 3.305683431101375e-11
+  hidden translation_1 -0.10000247514139742 -0.013999999999999999 0.12999902957725848
+  hidden rotation_1 0.5773110479851985 -0.5774110467781024 -0.5773287078717355 2.0944723417520184
+  hidden linearVelocity_1 1.4830092880840917e-07 5.40230403915154e-07 -1.5707388820942469e-06
+  hidden angularVelocity_1 -5.491459014664724e-06 1.5046666162654588e-06 -4.710421243394867e-11
+  translation 3.788125868442233 -2.4513326130755653 0.7388662658834523
+  rotation -0.001264039929121547 -0.0009893342211649001 -0.9999987117095983 1.832409828191799
+}
+Laptop {
+  hidden position_0_0 2.140110732048285e-05
+  hidden linearVelocity_0 3.3166330778814684e-10 2.373762759926583e-08 -9.183318168215621e-07
+  hidden angularVelocity_0 -2.376332468819709e-06 3.318555120183234e-08 3.3056837765090455e-11
+  hidden translation_1 -0.10000247823783076 -0.014000000000000004 0.12999902836320912
+  hidden rotation_1 0.5773110531311046 -0.5774110519231627 -0.5773286975801926 2.094472357191827
+  hidden linearVelocity_1 3.5340405224654124e-09 5.602049371041807e-07 -1.5707389101180524e-06
+  hidden angularVelocity_1 -5.693772306589042e-06 3.320244955591158e-08 -4.710815443723016e-11
+  translation -2.189833048240331 -2.465319730429951 0.7388662658813705
+  rotation -0.0012612279261759816 -0.001285403976637278 -0.9999983785190529 1.5708040607531466
+  name "laptop(1)"
+}
+Laptop {
+  hidden position_0_0 2.1401107315827757e-05
+  hidden linearVelocity_0 3.316633080394797e-10 2.3737627608830366e-08 -9.18331816934508e-07
+  hidden angularVelocity_0 -2.3763324723046956e-06 3.318555055045604e-08 3.305684424030773e-11
+  hidden translation_1 -0.10000247823783023 -0.014000000000000004 0.12999902836320934
+  hidden rotation_1 0.5773110531311038 -0.5774110519231619 -0.5773286975801943 2.0944723571918242
+  hidden linearVelocity_1 3.534038480726494e-09 5.602049317140479e-07 -1.5707389104022697e-06
+  hidden angularVelocity_1 -5.693772308169769e-06 3.3202450098730385e-08 -4.710811122454237e-11
+  translation 0.7077699517596685 -6.141359730429958 0.7388662658813714
+  rotation -0.0012612279261760596 -0.0012854039766373837 -0.9999983785190529 1.5708040607531466
+  name "laptop(2)"
+}
+Rosbot {
+  hidden position_0_0 39.60260648307594
+  hidden position_0_1 39.63841287370519
+  hidden position_0_2 39.602610060100616
+  hidden position_0_3 39.6384166314983
+  hidden linearVelocity_0 0.25798135127323213 0.0017223560555341241 -1.7695119836643039e-12
+  hidden angularVelocity_0 -6.722822472343071e-07 -4.1989123487347365e-09 6.977332561955821e-07
+  hidden rotation_2 0 1 0 1.9034946399984194
+  hidden linearVelocity_2 0.25798134440327586 0.0017223167404419879 -6.503744970738696e-08
+  hidden angularVelocity_2 -0.04005391034411002 5.999566313526778 4.1642708812507527e-07
+  hidden rotation_3 0 1 0 1.9393010306276737
+  hidden linearVelocity_3 0.25798135854709126 0.0017223168453584703 6.50064039065857e-08
+  hidden angularVelocity_3 -0.04005367871008546 5.999566316285412 6.580516039093252e-07
+  hidden rotation_4 0 1 0 1.9034982170230976
+  hidden linearVelocity_4 0.2579813445336181 0.0017223094288001857 -6.504094591289678e-08
+  hidden angularVelocity_4 -0.040053906812858066 5.999566313557121 4.170414926537612e-07
+  hidden rotation_5 0 1 0 1.9393047884207832
+  hidden linearVelocity_5 0.2579813586810971 0.0017223095324445442 6.506948176269821e-08
+  hidden angularVelocity_5 -0.04005367968529546 5.99956631628628 6.539762609898758e-07
+  translation 2.8209353211324992 -4.705538157030795 -0.0005625850789219566
+  rotation -2.1670559520012486e-05 0.0047615805820183715 0.9999886633761144 0.006675995657144275
+  controller "mapping_controller"
+}
