@@ -1,0 +1,74 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/CardboardBox.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/devices/slamtec/protos/RpLidarA2.proto"
+
+WorldInfo {
+  info [
+    "Pioneer 3DX (Adept Mobile Robots)"
+    "This two-wheel, two-motor differential drive robot has in addition a rear caster wheel"
+    "It is programmed to perform a simple obstacle avoidance behavior based on the values sensed by its 16 sonars"
+  ]
+  title "Pioneer 3-DX with blinking LEDs moving according to a Braitenberg rule"
+  basicTimeStep 8
+}
+Viewpoint {
+  fieldOfView 0.660595
+  orientation -0.35886046217615875 0.13115714779090948 0.9241303865094294 2.490154059894204
+  position 11.09413584703703 -12.751540909325415 14.1493040680901
+  follow "Pioneer 3-DX"
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 6 6
+  floorTileSize 2 2
+  wallThickness 0.1
+  wallHeight 0.4
+  wallAppearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/default/worlds/textures/red_brick_wall.jpg"
+      ]
+    }
+    roughness 1
+    metalness 0
+    textureTransform TextureTransform {
+      scale 11 13
+    }
+  }
+}
+CardboardBox {
+  translation -1.48831 -0.352735 0.15
+  size 0.3 0.6 0.3
+}
+DEF PIONEER_3DX Pioneer3dx {
+  hidden position_0_0 0.01754293566849341
+  hidden position_0_1 37.72031795177634
+  hidden position_0_2 34.90349516542196
+  hidden translation_1 -0.1917990831423325 1.8206049301182093e-08 2.427381110606254e-05
+  hidden rotation_1 0.584562681020092 -0.5737099842430189 -0.5737101410455261 2.0836099309877816
+  hidden position_1_0 -94.56110995155693
+  hidden rotation_2 1 0 0 5.969854963316455
+  hidden translation_4 1.6174238271319016e-06 0.1649999994459268 2.7419540821217585e-05
+  hidden rotation_4 0.573225675400403 -0.5732256747082948 -0.5855122978358114 2.0821952263902923
+  hidden translation_9 -1.0284611282568738e-05 -0.16500000156545552 -2.546910773934158e-05
+  hidden rotation_9 0.6332762923194193 -0.6332763561612762 0.444884472996379 3.9787760672840737
+  translation 9.27014e-05 -0.123262 0.0966414
+  rotation -0.012366728426565837 -0.0034280179918191587 -0.999917652969819 2.597309424722177
+  controller "mapping_controller"
+  extensionSlot [
+    Display {
+      width 501
+      height 501
+    }
+    RpLidarA2 {
+    }
+  ]
+}
