@@ -1,4 +1,5 @@
-# Fully patched mapping_controller.py with DWA integration and NaN safety
+# Full merged Mapping + fast DWA + Correct RPLidar A2 + robot.getSelf() Pose
+# Pioneer 3-DX corrected Controller
 
 from controller import Robot
 import math
@@ -9,63 +10,61 @@ from dwa_planner import DWAPlanner
 # DWA PARAMETERS
 # ======================
 dwa_params = {
-    "v_max": 0.5,
-    "w_max": 1.2,
-    "v_res": 0.05,
-    "w_res": 0.1,
+    "v_max": 1.4,             # was 0.5 → much faster
+    "w_max": 3.0,             # agile turning
+    "v_res": 0.1,             # coarser sampling = faster compute + bolder moves
+    "w_res": 0.2,
     "dt": 0.1,
-    "predict_time": 2.0,
-    "heading_weight": 1.2,
-    "velocity_weight": 0.2,
-    "clearance_weight": 1.0
+    "predict_time": 1.0,      # short horizon = fast reaction
+    "heading_weight": 6.0,    # strong goal seeking
+    "velocity_weight": 4.0,   # encourages moving forward quickly
+    "clearance_weight": 1.5,  # moderate caution
 }
 
 dwa = DWAPlanner(dwa_params)
 
 goal = [1.5, 1.5]  # temporary static goal
 
-# ======================
-# Constants
-# ======================
-MAX_SPEED = 5.24
-MAX_SENSOR_NUMBER = 16
-MAX_SENSOR_VALUE = 1024
-MIN_DISTANCE = 1.0
-WHEEL_WEIGHT_THRESHOLD = 100
-
-FORWARD = 0
-LEFT = 1
-RIGHT = 2
-
-# ======================
-# Init
-# ======================
+# ==============================================================
+# Init Robot
+# ==============================================================
 robot = Robot()
 time_step = int(robot.getBasicTimeStep())
 
-# LiDAR
+# ==============================================================
+# Ground-Truth Pose from Webots Node
+# ==============================================================
+node = robot.getSelf()
+
+# ==============================================================
+# LIDAR (RPLidar A2 in extensionSlot)
+# ==============================================================
 lidar = robot.getDevice("RPlidar A2")
 lidar.enable(time_step)
+lidar.enablePointCloud()
+
+# Allow lidar to stabilize
+for _ in range(10):
+    robot.step(time_step)
+
 lidar_res = lidar.getHorizontalResolution()
 lidar_fov = lidar.getFov()
 
-# Display
+# ==============================================================
+# Display Map
+# ==============================================================
 display = robot.getDevice("display")
 MAP_W = display.getWidth()
 MAP_H = display.getHeight()
-MAP_RES = 0.02  # meters/pixel
+MAP_RES = 0.02
 
 occupancy = [[0 for _ in range(MAP_W)] for _ in range(MAP_H)]
-
-# Robot pose
-robot_x = 0.0
-robot_y = 0.0
-robot_theta = 0.0
-
 map_cx = MAP_W // 2
 map_cy = MAP_H // 2
 
+# ==============================================================
 # Wheels
+# ==============================================================
 left_wheel = robot.getDevice("left wheel")
 right_wheel = robot.getDevice("right wheel")
 left_wheel.setPosition(float('inf'))
@@ -73,32 +72,13 @@ right_wheel.setPosition(float('inf'))
 
 WHEEL_RADIUS = 0.04875
 WHEEL_BASE = 0.331
+MAX_WHEEL_SPEED = 12.3
 
-# Encoders
-left_encoder = left_wheel.getPositionSensor()
-right_encoder = right_wheel.getPositionSensor()
-left_encoder.enable(time_step)
-right_encoder.enable(time_step)
-
-prev_left_pos = 0.0
-prev_right_pos = 0.0
-
-# Distance sensors (ignored for DWA but left initialized)
-sensors = []
-for i in range(MAX_SENSOR_NUMBER):
-    s = robot.getDevice(f"so{i}")
-    s.enable(time_step)
-    sensors.append(s)
-
-
+# ==============================================================
+# Helpers
+# ==============================================================
 def isnan(x):
     return (x is None) or (isinstance(x, float) and math.isnan(x)) or (x != x)
-
-
-def safe(x, fallback=0.0):
-    if isnan(x):
-        return fallback
-    return x
 
 
 def bresenham(x0, y0, x1, y1):
@@ -130,15 +110,27 @@ def bresenham(x0, y0, x1, y1):
     return points
 
 
+def get_robot_pose():
+    pos = node.getPosition()  # (X, Y, Z)
+    ori = node.getOrientation()  # 3x3 rotation matrix flattened
+
+    robot_x = pos[0]
+    robot_y = pos[2]  # Z-axis becomes mapping Y
+
+    R11 = ori[0]
+    R13 = ori[2]
+    robot_theta = math.atan2(R13, R11)
+
+    return robot_x, robot_y, robot_theta
+
+
 def get_obstacles_from_lidar(ranges, robot_x, robot_y, robot_theta):
     obs = []
     for i, r in enumerate(ranges):
-        if isnan(r) or r <= 0.0 or r > 4.5:
+        if isnan(r) or r < 0.1 or r > 5.0:
             continue
 
-        angle = -lidar_fov/2 + i * lidar_fov/lidar_res
-        if isnan(angle):
-            continue
+        angle = (i / lidar_res) * lidar_fov - lidar_fov / 2
 
         lx = r * math.cos(angle)
         ly = r * math.sin(angle)
@@ -152,45 +144,25 @@ def get_obstacles_from_lidar(ranges, robot_x, robot_y, robot_theta):
         obs.append((wx, wy))
     return obs
 
-
-# ======================
+# ==============================================================
 # MAIN LOOP
-# ======================
+# ==============================================================
 while robot.step(time_step) != -1:
-    # ODOMETRY
-    left_pos = safe(left_encoder.getValue(), prev_left_pos)
-    right_pos = safe(right_encoder.getValue(), prev_right_pos)
+    # Pose
+    robot_x, robot_y, robot_theta = get_robot_pose()
 
-    dleft = (left_pos - prev_left_pos) * WHEEL_RADIUS
-    dright = (right_pos - prev_right_pos) * WHEEL_RADIUS
-
-    prev_left_pos = left_pos
-    prev_right_pos = right_pos
-
-    d_center = (dleft + dright) / 2.0
-    d_theta = (dright - dleft) / WHEEL_BASE
-
-    robot_theta += d_theta
-    robot_theta = (robot_theta + math.pi) % (2 * math.pi) - math.pi
-
-    robot_x += d_center * math.cos(robot_theta)
-    robot_y += d_center * math.sin(robot_theta)
-
-    if isnan(robot_x) or isnan(robot_y) or isnan(robot_theta):
-        robot_x, robot_y, robot_theta = 0.0, 0.0, 0.0
-        continue
-
-    # LIDAR MAPPING
+    # Lidar scan
     ranges = lidar.getRangeImage()
 
+    # -----------------------------------------------------------
+    # Mapping
+    # -----------------------------------------------------------
     for i in range(lidar_res):
         r = ranges[i]
-        if isnan(r) or r < 0.15 or r > 4.5:
+        if isnan(r) or r < 0.1 or r > 5.0:
             continue
 
-        angle = -lidar_fov/2 + (i * lidar_fov / lidar_res)
-        if isnan(angle):
-            continue
+        angle = (i / lidar_res) * lidar_fov - lidar_fov / 2
 
         lx = r * math.cos(angle)
         ly = r * math.sin(angle)
@@ -218,9 +190,9 @@ while robot.step(time_step) != -1:
             display.setColor(0xFFFFFF)
             display.drawPixel(gx, gy)
 
-    # ======================
-    # DWA LOCAL PLANNER
-    # ======================
+    # -----------------------------------------------------------
+    # DWA
+    # -----------------------------------------------------------
     state = [robot_x, robot_y, robot_theta]
     obstacles = get_obstacles_from_lidar(ranges, robot_x, robot_y, robot_theta)
 
@@ -229,5 +201,11 @@ while robot.step(time_step) != -1:
     v_left = (v - w * WHEEL_BASE / 2) / WHEEL_RADIUS
     v_right = (v + w * WHEEL_BASE / 2) / WHEEL_RADIUS
 
+    v_left = max(min(v_left, MAX_WHEEL_SPEED), -MAX_WHEEL_SPEED)
+    v_right = max(min(v_right, MAX_WHEEL_SPEED), -MAX_WHEEL_SPEED)
+
     left_wheel.setVelocity(v_left)
     right_wheel.setVelocity(v_right)
+
+
+print("is supervisor?", robot.getSupervisor())
