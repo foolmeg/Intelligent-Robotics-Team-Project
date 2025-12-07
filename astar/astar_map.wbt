@@ -1,0 +1,153 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/apartment_structure/protos/Wall.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.15979091963867562 -0.9829581743533066 -0.09088503437332705 5.294566662719772
+  position -13.123009858299831 -1.8681544486753263 20.280883905682266
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 10 10
+  floorTileSize 0.25 0.25
+  wallHeight 0.05
+}
+Wall {
+  translation 0 1.43 0
+  size 0.1 2 1.3
+}
+Wall {
+  translation 2.71 3.52 0
+  name "wall(20)"
+  size 0.1 2 1.3
+}
+Wall {
+  translation -0.5 -1.15 0
+  name "wall(8)"
+  size 0.1 3 1.3
+}
+Wall {
+  translation 1.34 -3.24 0
+  name "wall(16)"
+  size 0.1 3 1.3
+}
+Wall {
+  translation -2.84 3.03 0
+  name "wall(5)"
+  size 0.1 3 1.3
+}
+Wall {
+  translation -5.06 0.54 0
+  name "wall(18)"
+  size 0.1 8 1.3
+}
+Wall {
+  translation 4.9 -0.08 0
+  name "wall(17)"
+  size 0.1 9.5 1.3
+}
+Wall {
+  translation -2.84 -3.48 0
+  name "wall(9)"
+  size 0.1 3 1.3
+}
+Wall {
+  translation -3.9 -3.48 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wall(10)"
+  size 0.1 2.2 1.3
+}
+Wall {
+  translation -1.83 -4.77 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wall(12)"
+  size 0.1 2.2 1.3
+}
+Wall {
+  translation 0.3 -4.77 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wall(13)"
+  size 0.1 2.2 1.3
+}
+Wall {
+  translation 2.45 -4.77 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wall(11)"
+  size 0.1 2.2 1.3
+}
+Wall {
+  translation 3.9 -4.77 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wall(15)"
+  size 0.1 2.2 1.3
+}
+Wall {
+  translation 2.45 -1.73 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wall(14)"
+  size 0.1 2.2 1.3
+}
+Wall {
+  translation 1.15 0.4 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wall(0)"
+  size 0.1 2.2 1.3
+}
+Wall {
+  translation 3.76 4.54 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wall(2)"
+  size 0.1 2.3 1.3
+}
+Wall {
+  translation -1.07 0.42 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wall(3)"
+  size 0.1 2.2 1.3
+}
+Wall {
+  translation -3.88 4.55 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wall(4)"
+  size 0.1 2.2 1.3
+}
+Wall {
+  translation -1.44 4.55 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wall(6)"
+  size 0.1 2.8 1.3
+}
+Wall {
+  translation 1.33 4.55 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wall(7)"
+  size 0.1 2.8 1.3
+}
+Pioneer3dx {
+  hidden position_0_0 -1.4552838256551088
+  hidden position_0_1 179.53862506963992
+  hidden position_0_2 79.55232004586634
+  hidden rotation_1 0.04085117760634655 -0.7065164986334533 -0.7065165379854178 3.0599356135135123
+  hidden position_1_0 -205.35606724809904
+  hidden rotation_2 -1 0 0 4.29413741835227
+  hidden rotation_4 -0.6484223664940765 0.6484224284065515 -0.3988693883586108 2.3825300148930904
+  hidden rotation_9 -0.6930159920048088 0.6930160447165676 -0.1986393631458658 2.7494188828075052
+  translation -4.2 3.5 0.0962461
+  rotation 0.021003501644926474 -0.037361102926001026 -0.9990810782448062 1.67075
+  controller "astar_controller"
+  extensionSlot [
+    GPS {
+    }
+    InertialUnit {
+    }
+  ]
+}
