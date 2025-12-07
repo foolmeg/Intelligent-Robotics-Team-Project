@@ -38,7 +38,8 @@ class DStarLite:
 
     def get_neighbors(self, s):
         neighbors = []
-        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+        # 8-connected grid (including diagonals for better paths)
+        for dx, dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
             nx, ny = s[0] + dx, s[1] + dy
             if 0 <= nx < self.rows and 0 <= ny < self.cols and self.grid[nx][ny] == 0:
                 neighbors.append((nx, ny))
@@ -76,13 +77,17 @@ class DStarLite:
             else:
                 old_g = self.g[u]
                 self.g[u] = float('inf')
-                for s in self.get_neighbors(u) + [u]:
+                neighbors = self.get_neighbors(u)
+                neighbors.append(u)
+                for s in neighbors:
                     self.update_vertex(s)
 
     def rescan(self, changed_cells):
         # changed_cells: list of (row, col) where cost changed
         for u in changed_cells:
-            for s in self.get_neighbors(u) + [u]:
+            neighbors = self.get_neighbors(u)
+            neighbors.append(u)
+            for s in neighbors:
                 self.update_vertex(s)
 
     def plan(self, changed=[]):
@@ -95,17 +100,35 @@ class DStarLite:
         path = []
         current = self.start
         seen = set()
-        while current != self.goal:
+        max_iterations = self.rows * self.cols  # Prevent infinite loops
+        
+        while current != self.goal and len(seen) < max_iterations:
             if current in seen:
-                return None
+                return None  # Loop detected
             seen.add(current)
             path.append(current)
-            current = min(
-                self.get_neighbors(current),
-                key=lambda s: self.g[s] + self.cost(current, s),
-                default=None
-            )
-            if current is None:
-                return None
-        path.append(self.goal)
-        return path
+            
+            neighbors = self.get_neighbors(current)
+            if not neighbors:
+                return None  # No valid neighbors
+            
+            # Find best neighbor based on g-value + cost
+            best_neighbor = None
+            best_cost = float('inf')
+            for s in neighbors:
+                if self.g[s] < float('inf'):
+                    total_cost = self.g[s] + self.cost(current, s)
+                    if total_cost < best_cost:
+                        best_cost = total_cost
+                        best_neighbor = s
+            
+            if best_neighbor is None:
+                return None  # No reachable path
+            
+            current = best_neighbor
+        
+        if current == self.goal:
+            path.append(self.goal)
+            return path
+        else:
+            return None  # Could not reach goal
