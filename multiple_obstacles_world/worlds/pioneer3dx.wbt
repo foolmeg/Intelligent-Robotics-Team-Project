@@ -1,0 +1,97 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/CardboardBox.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/devices/slamtec/protos/RpLidarA2.proto"
+
+WorldInfo {
+  info [
+    "Pioneer 3DX (Adept Mobile Robots)"
+    "This two-wheel, two-motor differential drive robot has in addition a rear caster wheel"
+    "It is programmed to perform a simple obstacle avoidance behavior based on the values sensed by its 16 sonars"
+  ]
+  title "Pioneer 3-DX with blinking LEDs moving according to a Braitenberg rule"
+  basicTimeStep 8
+}
+Viewpoint {
+  fieldOfView 0.660595
+  orientation -0.5672799880450407 -0.07971146427949513 0.8196581590065686 3.3709360011139644
+  position 8.731153009652456 2.910061061897424 20.768905894272507
+  follow "Pioneer 3-DX"
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 6 6
+  floorTileSize 2 2
+  wallThickness 0.1
+  wallHeight 0.4
+  wallAppearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/default/worlds/textures/red_brick_wall.jpg"
+      ]
+    }
+    roughness 1
+    metalness 0
+    textureTransform TextureTransform {
+      scale 11 13
+    }
+  }
+}
+CardboardBox {
+  translation -1.48831 -0.352735 0.15
+  size 0.3 0.6 0.3
+}
+CardboardBox {
+  translation -0.86831 -1.68274 0.15
+  name "cardboard box(1)"
+  size 0.3 0.6 0.3
+}
+CardboardBox {
+  translation 1.23169 -0.82273 0.15
+  name "cardboard box(2)"
+  size 0.3 0.6 0.3
+}
+CardboardBox {
+  translation 1.43169 1.46727 0.15
+  name "cardboard box(4)"
+  size 0.3 0.6 0.3
+}
+CardboardBox {
+  translation 0.11169 0.25727 0.15
+  name "cardboard box(5)"
+  size 0.3 0.6 0.3
+}
+CardboardBox {
+  translation -2.28831 -1.77273 0.15
+  name "cardboard box(3)"
+  size 0.3 0.6 0.3
+}
+DEF PIONEER_3DX Pioneer3dx {
+  hidden translation_1 -0.1918 0 0
+  hidden rotation_1 -0.025049253951390724 -0.7068848823193493 -0.7068849255889096 3.1916806065149568
+  hidden translation_2 0 -0.0521014 0.012843
+  hidden rotation_2 1 0 0 3.1849082093433796
+  hidden translation_4 0 0.165 0
+  hidden rotation_4 -0.7055416158275344 0.7055416614680041 -0.06649806214048656 3.0087921219925096
+  hidden translation_9 0 -0.165 0
+  hidden rotation_9 0.5476182362865903 -0.5476183060593816 0.6326361182820798 4.269735902798821
+  translation 2.20687 2.43462 0.34907
+  rotation 0.023336715021771946 -0.09528751471239783 0.9951762091569146 3.0672796938995748
+  controller "mapping_controller"
+  supervisor TRUE
+  extensionSlot [
+    Display {
+      width 501
+      height 501
+    }
+    RpLidarA2 {
+    }
+  ]
+}
