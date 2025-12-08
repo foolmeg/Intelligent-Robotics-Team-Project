@@ -1,435 +1,551 @@
-from controller import Robot
+# Full merged Mapping + fast DWA + Correct RPLidar A2 + robot.getSelf() Pose
+# Pioneer 3-DX corrected Controller (x-z plane unified)
+
+from controller import Supervisor
 import math
-import sys
-import os
+import numpy as np
 
-# Import D* Lite from parent directory
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from d_start_lite import DStarLite
+from dwa_planner import DWAPlanner
+from dstar_lite import DStarLite
 
-# ======================
-# Constants
-# ======================
-MAX_SPEED = 5.24
-MAX_SENSOR_NUMBER = 16
 
-FORWARD = 0
-LEFT = 1
-RIGHT = 2
+# ==============================================================
+# DWA PARAMETERS (tuned)
+# ==============================================================
+dwa_params = {
+    "v_max": 0.4,  # Moderate speed
+    "w_max": 2.0,  # Moderate angular velocity
+    "v_res": 0.08,  # Finer resolution for better control
+    "w_res": 0.12,
+    "dt": 0.1,  # Smaller timestep for more accurate prediction
+    "predict_time": 2.5,  # Longer prediction time - predicts ~1.0m ahead at max speed
 
-# ======================
-# Init
-# ======================
-robot = Robot()
+    "heading_weight": 8.0,  # Balanced - follow path but maintain safety
+    "velocity_weight": 2.0,  # Moderate - balance speed and safety
+    "clearance_weight": 1.8,  # Increased - maintain safe distance from walls/obstacles
+
+    "robot_radius": 0.25,
+    "max_accel": 1.0,  # Moderate acceleration
+    "max_ang_acc": 2.5,  # Moderate angular acceleration
+}
+
+dwa = DWAPlanner(dwa_params)
+
+
+# ==============================================================
+# Webots supervisor setup
+# ==============================================================
+robot = Supervisor()
 time_step = int(robot.getBasicTimeStep())
+node = robot.getSelf()
 
-# LiDAR
+
+# ==============================================================
+# LIDAR
+# ==============================================================
 lidar = robot.getDevice("RPlidar A2")
 lidar.enable(time_step)
+lidar.enablePointCloud()
+
+for _ in range(10):
+    robot.step(time_step)
+
 lidar_res = lidar.getHorizontalResolution()
 lidar_fov = lidar.getFov()
 
-# LiDAR yaw offset (keep 0 as direction is correct)
-LIDAR_YAW_OFFSET = 0.0
 
-# Display
+# ==============================================================
+# Display mapping
+# ==============================================================
 display = robot.getDevice("display")
 MAP_W = display.getWidth()
 MAP_H = display.getHeight()
-MAP_RES = 0.02  # 2cm/pixel
-
-# Occupancy grid
-occupancy = [[0 for _ in range(MAP_W)] for _ in range(MAP_H)]
-current_obstacles = set()
-
-# Odometry pose (Webots: X forward, Y left)
-robot_x = 0.0
-robot_y = 0.0
-robot_theta = 0.0
-
+MAP_RES = 0.02
 map_cx = MAP_W // 2
 map_cy = MAP_H // 2
 
-# Motors
+occupancy = [[0 for _ in range(MAP_W)] for _ in range(MAP_H)]
+
+
+# ==============================================================
+# Wheels & robot geometry
+# ==============================================================
 left_wheel = robot.getDevice("left wheel")
 right_wheel = robot.getDevice("right wheel")
+
 left_wheel.setPosition(float('inf'))
 right_wheel.setPosition(float('inf'))
 
-# Use pre-tuned values
-WHEEL_RADIUS = 0.0975
-WHEEL_BASE   = 0.33
+WHEEL_RADIUS = 0.04875
+WHEEL_BASE = 0.331
+MAX_WHEEL_SPEED = 12.3
 
-left_encoder = left_wheel.getPositionSensor()
-right_encoder = right_wheel.getPositionSensor()
-left_encoder.enable(time_step)
-right_encoder.enable(time_step)
 
-prev_left_pos = left_encoder.getValue() or 0.0
-prev_right_pos = right_encoder.getValue() or 0.0
+# ==============================================================
+# Global grid (x-z plane)
+# ==============================================================
+GRID_ROWS = 30
+GRID_COLS = 30
+GRID_CELL = 0.2
+GRID_X_MIN = -3.0
+GRID_Z_MIN = -3.0
 
-# IR sensors (not used but kept)
-sensors = []
-for i in range(MAX_SENSOR_NUMBER):
-    s = robot.getDevice(f"so{i}")
-    s.enable(time_step)
-    sensors.append(s)
+global_grid = [[0 for _ in range(GRID_COLS)] for _ in range(GRID_ROWS)]
 
-# ======================
-# Coordinate transformation functions
-# ======================
-def world_to_grid(wx, wy):
+planner = None
+global_path_world = []
+current_wp_index = 0
+step_count = 0
+last_replan_step = 0
+REPLAN_INTERVAL = 100  # Replan every 100 steps (less frequent for performance)
+
+
+# ==============================================================
+# Helpers
+# ==============================================================
+def get_robot_pose():
+    pos = node.getPosition()
+    ori = node.getOrientation()
+
+    robot_x = pos[0]
+    robot_y = pos[1]  # CHECK: height value
+    robot_z = pos[2]
+
+    robot_theta = math.atan2(ori[3], ori[0])
+    return robot_x, robot_y, robot_z, robot_theta
+
+
+def world_to_grid(x, y):
     """
-    Webots world (X forward, Y left) -> display grid
-    Map x to right (+), y to top (-) for display
+    Convert world coordinates (x, y) to grid coordinates.
+    Note: Parameter name was 'z' but actually represents y-coordinate (x-y plane).
+    GRID_Z_MIN is actually the y-coordinate minimum.
     """
-    gx = int(map_cx + wx / MAP_RES)
-    gy = int(map_cy - wy / MAP_RES)
-    return gx, gy
+    col = int((x - GRID_X_MIN) / GRID_CELL)
+    row = int((y - GRID_Z_MIN) / GRID_CELL)  # GRID_Z_MIN is actually y-coordinate
+    if 0 <= row < GRID_ROWS and 0 <= col < GRID_COLS:
+        return (row, col)
+    return None
 
-def grid_to_world(gx, gy):
+
+def grid_to_world(r, c):
     """
-    display grid -> Webots world
-    Exact inverse of world_to_grid
+    Convert grid coordinates to world coordinates (x, y).
+    Returns (x, y) tuple where y corresponds to the grid's Z_MIN dimension.
     """
-    wx = (gx - map_cx) * MAP_RES
-    wy = -(gy - map_cy) * MAP_RES
-    return wx, wy
+    world_x = GRID_X_MIN + (c + 0.5) * GRID_CELL
+    world_y = GRID_Z_MIN + (r + 0.5) * GRID_CELL  # GRID_Z_MIN is actually y-coordinate
+    return (world_x, world_y)
 
-def draw_robot_on_display(gx, gy, theta):
-    display.setColor(0x0000FF)  # blue
-    display.fillOval(gx - 3, gy - 3, 6, 6)
 
-    arrow_len_world = 0.20
-    arrow_wx = robot_x + arrow_len_world * math.cos(theta)
-    arrow_wy = robot_y + arrow_len_world * math.sin(theta)
-    ax, ay = world_to_grid(arrow_wx, arrow_wy)
-    display.drawLine(gx, gy, ax, ay)
+def isnan(x):
+    return (x is None) or (isinstance(x, float) and math.isnan(x)) or (x != x)
 
-def draw_goal_on_display(gx, gy):
-    display.setColor(0x00FF00)
-    display.fillOval(gx - 3, gy - 3, 6, 6)
 
-# ======================
-# D* Lite Setup
-# ======================
-# Goal: world coordinates (1.0, -1.0) near (right, down)
-goal_world = (1.0, -1.0)
-GOAL_NODE = world_to_grid(*goal_world)
+def smooth_path(path, min_distance=0.4):
+    """
+    Remove redundant waypoints from path to make it more efficient.
+    Keeps waypoints that are at least min_distance apart.
+    """
+    if len(path) <= 2:
+        return path
+    
+    smoothed = [path[0]]  # Always keep start
+    for i in range(1, len(path) - 1):
+        # Calculate distance from last kept waypoint
+        last_x, last_y = smoothed[-1]
+        curr_x, curr_y = path[i]
+        dist = math.hypot(curr_x - last_x, curr_y - last_y)
+        
+        # Keep waypoint if it's far enough
+        if dist >= min_distance:
+            smoothed.append(path[i])
+    
+    # Always keep goal
+    if len(smoothed) == 0 or smoothed[-1] != path[-1]:
+        smoothed.append(path[-1])
+    
+    return smoothed
 
-# Clamp to map bounds
-GOAL_NODE = (
-    max(10, min(MAP_W - 10, GOAL_NODE[0])),
-    max(10, min(MAP_H - 10, GOAL_NODE[1]))
-)
 
-START_NODE = (map_cx, map_cy)
-dstar = DStarLite(MAP_W, MAP_H, START_NODE, GOAL_NODE)
+def filter_obstacles_on_path(obstacles, path, robot_x, robot_y, trust_radius=0.4):
+    """
+    Filter out obstacles that are on or very close to the planned path.
+    This allows DWA to trust D*Lite's path planning and not overreact to obstacles
+    that are already accounted for in the global plan.
+    """
+    if len(path) < 2:
+        return obstacles
+    
+    filtered = []
+    for ox, oy in obstacles:
+        min_dist_to_path = float('inf')
+        
+        # Check distance to each path segment
+        for i in range(len(path) - 1):
+            p1_x, p1_y = path[i]
+            p2_x, p2_y = path[i + 1]
+            
+            # Distance from obstacle to line segment
+            # Vector from p1 to p2
+            dx = p2_x - p1_x
+            dy = p2_y - p1_y
+            seg_len_sq = dx*dx + dy*dy
+            
+            if seg_len_sq < 1e-6:  # Degenerate segment
+                dist = math.hypot(ox - p1_x, oy - p1_y)
+            else:
+                # Vector from p1 to obstacle
+                t = max(0, min(1, ((ox - p1_x) * dx + (oy - p1_y) * dy) / seg_len_sq))
+                # Closest point on segment
+                closest_x = p1_x + t * dx
+                closest_y = p1_y + t * dy
+                dist = math.hypot(ox - closest_x, oy - closest_y)
+            
+            min_dist_to_path = min(min_dist_to_path, dist)
+        
+        # Only keep obstacles that are significantly off the path
+        # or very close to the robot (safety)
+        dist_to_robot = math.hypot(ox - robot_x, oy - robot_y)
+        # Keep obstacles that are far from path OR very close to robot (emergency safety)
+        if min_dist_to_path > trust_radius or dist_to_robot < 0.35:  # Balanced emergency distance
+            filtered.append((ox, oy))
+    
+    return filtered
 
-print(f"D* Lite Initialized. Start: {START_NODE}, Goal: {GOAL_NODE}")
-dstar.replan(START_NODE)
-test_path = dstar.getShortestPath(START_NODE) if hasattr(dstar, "getShortestPath") else dstar.get_shortest_path(START_NODE)
-if test_path:
-    print(f"D* initial path length: {len(test_path)}")
-else:
-    print("D* initial path FAILED (empty map). Check START/GOAL.")
 
-# Unify DStarLite interface names
-def dstar_get_path(node):
-    if hasattr(dstar, "getShortestPath"):
-        return dstar.getShortestPath(node)
+def bresenham(x0, y0, x1, y1):
+    points = []
+    dx = abs(x1 - x0)
+    dy = abs(y1 - y0)
+    x, y = x0, y0
+    sx = 1 if x0 < x1 else -1
+    sy = 1 if y0 < y1 else -1
+    if dx > dy:
+        err = dx // 2
+        while x != x1:
+            points.append((x, y))
+            err -= dy
+            if err < 0:
+                y += sy
+                err += dx
+            x += sx
     else:
-        return dstar.get_shortest_path(node)
+        err = dy // 2
+        while y != y1:
+            points.append((x, y))
+            err -= dx
+            if err < 0:
+                x += sx
+                err += dy
+            y += sy
+    points.append((x1, y1))
+    return points
 
-# ======================
-# Util
-# ======================
-def safe(x, fallback=0.0):
-    if x is None or (isinstance(x, float) and math.isnan(x)):
-        return fallback
-    return x
 
-# Inflation: approximately 24cm (12 * 0.02)
-INFLATION_RADIUS = 7
-inflation_offsets = []
-for dy in range(-INFLATION_RADIUS, INFLATION_RADIUS + 1):
-    for dx in range(-INFLATION_RADIUS, INFLATION_RADIUS + 1):
-        if dx * dx + dy * dy <= INFLATION_RADIUS * INFLATION_RADIUS:
-            inflation_offsets.append((dx, dy))
+def get_obstacles_from_lidar(ranges, robot_x, robot_y, robot_theta):
+    obs = []
+    num_samples = len(ranges)
+    if num_samples == 0:
+        return obs
 
-# Protect only around goal
-GOAL_SAFE_RADIUS_SQ = int((0.25 / MAP_RES) ** 2)  # 25cm
+    # Downsample lidar for performance - process every Nth point
+    downsample_factor = max(1, num_samples // 60)  # Limit to ~60 points max
 
-debug_counter = 0
-prev_node = START_NODE
-replan_counter = 0
-
-# ======================
-# Main loop
-# ======================
-while robot.step(time_step) != -1:
-
-    # ---------------- Odometry ----------------
-    left_pos = safe(left_encoder.getValue(), prev_left_pos)
-    right_pos = safe(right_encoder.getValue(), prev_right_pos)
-
-    dleft  = (left_pos  - prev_left_pos)  * WHEEL_RADIUS
-    dright = (right_pos - prev_right_pos) * WHEEL_RADIUS
-
-    prev_left_pos = left_pos
-    prev_right_pos = right_pos
-
-    ENCODER_NOISE_THRESHOLD = 1e-4
-    if abs(dleft) < ENCODER_NOISE_THRESHOLD:
-        dleft = 0.0
-    if abs(dright) < ENCODER_NOISE_THRESHOLD:
-        dright = 0.0
-
-    d_center = (dleft + dright) / 2.0
-    d_theta  = (dright - dleft) / WHEEL_BASE
-
-    ANGLE_NOISE_THRESHOLD = 1e-4
-    if abs(d_theta) < ANGLE_NOISE_THRESHOLD:
-        d_theta = 0.0
-
-    robot_theta += d_theta
-    robot_theta = (robot_theta + math.pi) % (2 * math.pi) - math.pi
-
-    robot_x += d_center * math.cos(robot_theta)
-    robot_y += d_center * math.sin(robot_theta)
-
-    curr_gx, curr_gy = world_to_grid(robot_x, robot_y)
-    curr_gx = max(0, min(MAP_W - 1, curr_gx))
-    curr_gy = max(0, min(MAP_H - 1, curr_gy))
-    current_node = (curr_gx, curr_gy)
-
-    # Display robot/goal
-    draw_robot_on_display(curr_gx, curr_gy, robot_theta)
-    draw_goal_on_display(GOAL_NODE[0], GOAL_NODE[1])
-
-    debug_counter += 1
-    if debug_counter % 50 == 0:
-        gx, gy = GOAL_NODE
-        gwx, gwy = grid_to_world(gx, gy)
-        dist_goal = math.sqrt((robot_x - gwx) ** 2 + (robot_y - gwy) ** 2)
-        print(f"Pose world=({robot_x:.2f},{robot_y:.2f},{math.degrees(robot_theta):.1f}°) "
-              f"grid={current_node}, goal_world=({gwx:.2f},{gwy:.2f}), dist={dist_goal:.2f}")
-
-    # ---------------- LiDAR & Map update (ZONE sampling) ----------------
-    ranges = lidar.getRangeImage()
-    detected_obstacles = set()
-
-    for i in range(0, lidar_res):
-        # Webots: -fov/2 ~ +fov/2
-        angle_raw = -lidar_fov / 2.0 + (i * lidar_fov / lidar_res)
-        angle = angle_raw + LIDAR_YAW_OFFSET
-
-        abs_angle = abs(angle)
-        if abs_angle <= math.pi / 3:          # Front ±60°
-            ray_step = 1
-        elif abs_angle <= 2 * math.pi / 3:    # Side ±60°~±120°
-            ray_step = 4
-        else:                                 # Back ±120°~180°
-            ray_step = 12
-
-        if i % ray_step != 0:
+    for i in range(0, num_samples, downsample_factor):
+        r = ranges[i]
+        # Increased minimum range check for earlier obstacle detection
+        if isnan(r) or r < 0.15 or r > 5.0:
             continue
+        # Distribute angles across FOV
+        angle = (i / (num_samples - 1)) * lidar_fov - lidar_fov / 2 if num_samples > 1 else 0.0
 
-        r = safe(ranges[i])
-        if r < 0.12 or r > 7.5:
-            continue
-
-        # LiDAR local (robot frame)
+        # Lidar point in robot frame (x-forward, y-side) mapped to x-z plane
         lx = r * math.cos(angle)
         ly = r * math.sin(angle)
 
-        # Robot coordinates -> World coordinates (keep current correct version)
         wx = robot_x + (lx * math.cos(robot_theta) - ly * math.sin(robot_theta))
-        wy = robot_y - (lx * math.sin(robot_theta) + ly * math.cos(robot_theta))
+        wy = robot_y + (lx * math.sin(robot_theta) + ly * math.cos(robot_theta))
 
-        gx, gy = world_to_grid(wx, wy)
-        if gx < 0 or gy < 0 or gx >= MAP_W or gy >= MAP_H:
+        obs.append((wx, wy))
+
+    return obs
+
+
+# ==============================================================
+# GLOBAL GOAL (x, z)
+# ==============================================================
+GOAL_WORLD = (-1.0, -1.0)
+
+
+# ==============================================================
+# Main loop
+# ==============================================================
+while robot.step(time_step) != -1:
+    step_count += 1
+
+    robot_x, robot_y, robot_z, robot_theta = get_robot_pose()
+    
+    # ============================
+    # DEBUG: POSE + LIDAR MAPPING
+    # ============================
+
+    # Stop at goal
+    if math.hypot(robot_x - GOAL_WORLD[0], robot_y - GOAL_WORLD[1]) < 0.4:
+        left_wheel.setVelocity(0)
+        right_wheel.setVelocity(0)
+        continue
+
+    ranges = lidar.getRangeImage()
+    
+    # ============================
+    # DEBUG: POSE + LIDAR MAPPING
+    # ============================
+    print(f"[POSE] x={robot_x:.3f}, y={robot_y:.3f}, z={robot_z:.3f}, theta={robot_theta:.3f}")
+
+    if len(ranges) > 0:
+        # 라이다 중앙 근처 하나 샘플링 (정면)
+        i = lidar_res // 2
+        r = ranges[i]
+
+        if not isnan(r) and 0.15 < r < 5.0:
+            # 라이다 각도 계산
+            angle = (i / (lidar_res - 1)) * lidar_fov - lidar_fov / 2
+
+            
+            lx = r * math.cos(angle)
+            ly = r * math.sin(angle)
+
+            # world frame 변환
+            wx = robot_x + (lx * math.cos(robot_theta) - ly * math.sin(robot_theta))
+            wy = robot_y + (lx * math.sin(robot_theta) + ly * math.cos(robot_theta))
+
+            print(
+                f"[LIDAR] r={r:.3f}, angle={angle:.3f} | "
+                f"local=({lx:.3f}, {ly:.3f}) | world=({wx:.3f}, {wy:.3f})"
+            )
+        else:
+            print(f"[LIDAR] invalid r={r}")
+
+
+    
+
+    # ----------------------------------------------------------
+    # Mapping to display + global grid (downsampled for performance)
+    # ----------------------------------------------------------
+    num_samples = len(ranges)
+    map_downsample = max(1, num_samples // 40)  # Process ~40 points for mapping
+
+    for i in range(0, min(num_samples, lidar_res), map_downsample):
+        r = ranges[i]
+        # Increased minimum range check for earlier obstacle detection
+        if isnan(r) or r < 0.15 or r > 5.0:
             continue
 
-        # Inflation
-        for dx, dy in inflation_offsets:
-            ix = gx + dx
-            iy = gy + dy
-            if 0 <= ix < MAP_W and 0 <= iy < MAP_H:
-                dist_to_goal_sq = (ix - GOAL_NODE[0]) ** 2 + (iy - GOAL_NODE[1]) ** 2
-                if dist_to_goal_sq > GOAL_SAFE_RADIUS_SQ:
-                    detected_obstacles.add((ix, iy))
+        angle = (i / (num_samples - 1)) * lidar_fov - lidar_fov / 2 if num_samples > 1 else 0.0
+        lx = r * math.cos(angle)
+        ly = r * math.sin(angle)
 
-    # Diff update
-    to_remove = current_obstacles - detected_obstacles
-    to_add    = detected_obstacles - current_obstacles
+        wx = robot_x + (lx * math.cos(robot_theta) - ly * math.sin(robot_theta))
+        wy = robot_y + (lx * math.sin(robot_theta) + ly * math.cos(robot_theta))
 
-    MAX_MAP_CHANGES = 80
-    is_rotating_only = abs(d_center) < 0.001 and abs(d_theta) > 0.001
-    if is_rotating_only:
-        MAX_MAP_CHANGES = 40
 
-    if len(to_add) + len(to_remove) > MAX_MAP_CHANGES:
-        map_changed = False
-        if debug_counter % 50 == 0:
-            print(f"[Map] Too many changes ({len(to_add)+len(to_remove)}), ignore this frame")
-    else:
-        map_changed = False
-        for ox, oy in to_remove:
-            occupancy[oy][ox] = 0
-            dstar.clear_obstacle(ox, oy)
-            display.setColor(0x000000)
-            display.drawPixel(ox, oy)
-            map_changed = True
+        # Display coordinates
+        gx = int(map_cx + wx / MAP_RES)
+        gy = int(map_cy - wy / MAP_RES)
 
-        for ox, oy in to_add:
-            occupancy[oy][ox] = 1
-            dstar.set_obstacle(ox, oy)
+        if 0 <= gx < MAP_W and 0 <= gy < MAP_H:
+            rx = int(map_cx + robot_x / MAP_RES)
+            ry = int(map_cy - robot_y / MAP_RES)
+
+            # Free space along the ray
+            bres_points = bresenham(rx, ry, gx, gy)
+            bres_step = max(1, len(bres_points) // 20)
+            for j in range(0, len(bres_points), bres_step):
+                fx, fy = bres_points[j]
+                if 0 <= fx < MAP_W and 0 <= fy < MAP_H:
+                    occupancy[fy][fx] = 0
+                    display.setColor(0x000000)
+                    display.drawPixel(fx, fy)
+
+            # Occupied cell (endpoint)
+            occupancy[gy][gx] = 1
             display.setColor(0xFFFFFF)
-            display.drawPixel(ox, oy)
-            map_changed = True
+            display.drawPixel(gx, gy)
 
-    current_obstacles = detected_obstacles
+        # Global grid update (x-y plane, but world_to_grid uses x-z parameter names)
+        # Only mark as obstacle if distance is reasonable (not too far, not too close)
+        cell = world_to_grid(wx, wy)
+        if cell is not None:
+            # Only mark as obstacle if it's a real obstacle (not just noise)
+            dist_to_robot = math.hypot(wx - robot_x, wy - robot_y)
+            if 0.2 < dist_to_robot < 4.5:  # Reasonable obstacle distance
+                global_grid[cell[0]][cell[1]] = 1
 
-    # ---------------- Path planning (D*) ----------------
-    node_moved = (current_node != prev_node)
-    replan_counter += 1
-    if map_changed or node_moved or replan_counter >= 20:
-        dstar.replan(current_node)
-        prev_node = current_node
-        replan_counter = 0
+    # ----------------------------------------------------------
+    # Global planning (initial or periodic replanning)
+    # ----------------------------------------------------------
+    should_replan = (planner is None) or (step_count - last_replan_step > REPLAN_INTERVAL)
 
-    path = dstar_get_path(current_node)
-    if not path:
-        print(f"No path! current_node={current_node}, GOAL={GOAL_NODE}")
-        left_wheel.setVelocity(0)
-        right_wheel.setVelocity(0)
-        continue
+    if should_replan:
+        start_cell = world_to_grid(robot_x, robot_y)
+        goal_cell = world_to_grid(GOAL_WORLD[0], GOAL_WORLD[1])
 
-    # ---------------- Goal check ----------------
-    gwx, gwy = grid_to_world(GOAL_NODE[0], GOAL_NODE[1])
-    dist_to_goal = math.sqrt((robot_x - gwx) ** 2 + (robot_y - gwy) ** 2)
-    if dist_to_goal < 0.10:
-        print("Goal reached.")
-        left_wheel.setVelocity(0)
-        right_wheel.setVelocity(0)
-        continue
+        if start_cell is None or goal_cell is None:
+            # Robot or goal outside grid bounds
+            if planner is None:
+                left_wheel.setVelocity(0)
+                right_wheel.setVelocity(0)
+                continue
+        else:
+            # Start/goal must be free for planning
+            if global_grid[start_cell[0]][start_cell[1]] == 1:
+                global_grid[start_cell[0]][start_cell[1]] = 0
+            if global_grid[goal_cell[0]][goal_cell[1]] == 1:
+                global_grid[goal_cell[0]][goal_cell[1]] = 0
 
-    # ---------------- Emergency avoidance (front lidar) ----------------
-    front_min_dist = float('inf')
-    left_min_dist  = float('inf')
-    right_min_dist = float('inf')
+            # Reuse planner if it exists and goal hasn't changed, otherwise create new one
+            if planner is None or planner.goal != goal_cell:
+                planner = DStarLite(global_grid, start_cell, goal_cell)
+                path_cells = planner.plan()
+            else:
+                # Update start position, grid, and replan
+                planner.start = start_cell
+                path_cells = planner.plan(new_grid=global_grid)
+            
+            if path_cells is None or len(path_cells) == 0:
+                # Path planning failed - clear path and try direct navigation
+                global_path_world = []
+            else:
+                global_path_world = [grid_to_world(r, c) for (r, c) in path_cells]
+                
+                # Smooth path to remove redundant waypoints
+                if len(global_path_world) > 2:
+                    global_path_world = smooth_path(global_path_world)
 
-    fov_range = math.pi / 3
-    center_start = int(lidar_res * (0.5 - fov_range / lidar_fov))
-    center_end   = int(lidar_res * (0.5 + fov_range / lidar_fov))
+                if len(global_path_world) > 0:
+                    # Find closest waypoint ahead of current position
+                    min_dist = float('inf')
+                    best_idx = 0
+                    for idx, (wx, wy) in enumerate(global_path_world):
+                        dist = math.hypot(robot_x - wx, robot_y - wy)
+                        # Prefer waypoints ahead (further along the path)
+                        if idx >= current_wp_index and dist < min_dist:
+                            min_dist = dist
+                            best_idx = idx
+                        elif idx < current_wp_index and dist < min_dist * 0.5:
+                            # Only go back if significantly closer
+                            min_dist = dist
+                            best_idx = idx
+                    current_wp_index = best_idx
 
-    for i in range(center_start, center_end):
-        r = safe(ranges[i])
-        if r < 0.1 or r > 7.5:
+            last_replan_step = step_count
+
+    # ----------------------------------------------------------
+    # Local goal selection (from global path or direct goal)
+    # ----------------------------------------------------------
+    if len(global_path_world) == 0:
+        # Direct navigation to goal - but be more careful
+        dx = GOAL_WORLD[0] - robot_x
+        dy = GOAL_WORLD[1] - robot_y
+        dist_to_goal = math.hypot(dx, dy)
+        
+        # If very close to goal, stop
+        if dist_to_goal < 0.3:
+            left_wheel.setVelocity(0)
+            right_wheel.setVelocity(0)
             continue
-        angle_raw = -lidar_fov / 2.0 + (i * lidar_fov / lidar_res)
-        angle = angle_raw + LIDAR_YAW_OFFSET
-        if angle < -0.1:
-            left_min_dist = min(left_min_dist, r)
-        elif angle > 0.1:
-            right_min_dist = min(right_min_dist, r)
-        if abs(angle) < math.pi * 2 / 9:
-            front_min_dist = min(front_min_dist, r)
+        
+        goal_dir = math.atan2(dy, dx)
+        LOOKAHEAD_MIN = 0.15  # Smaller lookahead for direct navigation
+        LOOKAHEAD_MAX = 0.4   # Smaller max for safety
+        look_ahead = min(LOOKAHEAD_MAX, max(LOOKAHEAD_MIN, dist_to_goal))
 
-    is_blocked = False
-    emergency_turn_dir = 0
-    # Force avoidance if within 0.25m ahead
-    if front_min_dist < 0.25:
-        is_blocked = True
-        if left_min_dist > 0.5 and right_min_dist < 0.5:
-            emergency_turn_dir = 1
-        elif right_min_dist > 0.5 and left_min_dist < 0.5:
-            emergency_turn_dir = -1
-        elif left_min_dist < right_min_dist:
-            emergency_turn_dir = -1
-        else:
-            emergency_turn_dir = 1
-        if debug_counter % 10 == 0:
-            print(f"[BLOCK] front={front_min_dist:.2f}, L={left_min_dist:.2f}, "
-                  f"R={right_min_dist:.2f}, turn={'L' if emergency_turn_dir>0 else 'R'}")
-
-    # ---------------- Path following ----------------
-    speed_left = 0.0
-    speed_right = 0.0
-
-    if len(path) > 1:
-        # Look slightly ahead
-        lookahead = 2
-        target_idx = min(len(path) - 1, lookahead)
-        next_node = path[target_idx]
-        target_wx, target_wy = grid_to_world(next_node[0], next_node[1])
-
-        dx = target_wx - robot_x
-        dy = target_wy - robot_y
-        target_angle = math.atan2(dy, dx)
-
-        angle_diff = target_angle - robot_theta
-        angle_diff = (angle_diff + math.pi) % (2 * math.pi) - math.pi
-
-        # Set path_safe = False if obstacle in immediate cell
-        path_safe = True
-        if len(path) > 1:
-            nx = path[1]
-            if 0 <= nx[0] < MAP_W and 0 <= nx[1] < MAP_H:
-                if occupancy[nx[1]][nx[0]] == 1:
-                    path_safe = False
-
-        if is_blocked:
-            # Completely blocked: almost in-place rotation + slight forward movement
-            base_speed = 0.0
-            if front_min_dist < 0.18:
-                turn_speed = MAX_SPEED * 0.8 * emergency_turn_dir
-            elif front_min_dist < 0.25:
-                turn_speed = MAX_SPEED * 0.6 * emergency_turn_dir
-            else:
-                turn_speed = MAX_SPEED * 0.4 * emergency_turn_dir
-        elif not path_safe:
-            # If immediate node blocked: slowly rotate while correcting
-            base_speed = MAX_SPEED * 0.25
-            k_p = 2.0
-            turn_speed = k_p * angle_diff
-        elif abs(angle_diff) > 0.35:
-            # If significantly misaligned, rotate in place
-            base_speed = 0.0
-            k_p = 3.0
-            turn_speed = k_p * angle_diff
-        elif abs(angle_diff) > 0.15:
-            # When slightly misaligned: slowly advance while rotating
-            base_speed = MAX_SPEED * 0.4
-            k_p = 2.0
-            turn_speed = k_p * angle_diff
-        else:
-            # If angle well aligned, increase speed
-            if front_min_dist < 0.60:
-                base_speed = MAX_SPEED * 0.5 * (front_min_dist / 0.60)
-            else:
-                base_speed = MAX_SPEED * 0.8
-            k_p = 1.0
-            turn_speed = k_p * angle_diff
-
-        distance_to_target = math.sqrt(dx * dx + dy * dy)
-        if distance_to_target < 0.3:
-            base_speed = min(base_speed, MAX_SPEED * 0.3)
-
-        max_turn = MAX_SPEED * 0.6
-        turn_speed = max(-max_turn, min(max_turn, turn_speed))
-
-        speed_left  = base_speed - turn_speed
-        speed_right = base_speed + turn_speed
-
-        speed_left  = max(-MAX_SPEED, min(MAX_SPEED, speed_left))
-        speed_right = max(-MAX_SPEED, min(MAX_SPEED, speed_right))
+        local_goal = [
+            robot_x + look_ahead * math.cos(goal_dir),
+            robot_y + look_ahead * math.sin(goal_dir)
+        ]
     else:
-        if current_node == GOAL_NODE:
-            print("Goal reached (path len 1).")
-        speed_left = 0.0
-        speed_right = 0.0
+        if current_wp_index >= len(global_path_world):
+            current_wp_index = len(global_path_world) - 1
 
-    left_wheel.setVelocity(speed_left)
-    right_wheel.setVelocity(speed_right)
+        wp_x, wp_y = global_path_world[current_wp_index]
+        dx = wp_x - robot_x
+        dy = wp_y - robot_y
+        dist_wp = math.hypot(dx, dy)
+
+        # Adaptive waypoint threshold based on path curvature
+        waypoint_threshold = 0.5  # Base threshold
+        if current_wp_index < len(global_path_world) - 1:
+            # Look ahead to next waypoint
+            next_wp_x, next_wp_y = global_path_world[current_wp_index + 1]
+            # Calculate angle between current->wp and wp->next_wp
+            angle1 = math.atan2(dy, dx)
+            angle2 = math.atan2(next_wp_y - wp_y, next_wp_x - wp_x)
+            angle_diff = abs(angle1 - angle2)
+            if angle_diff > math.pi:
+                angle_diff = 2 * math.pi - angle_diff
+            # If path is straight, use larger threshold for smoother movement
+            if angle_diff < 0.3:  # ~17 degrees
+                waypoint_threshold = 0.7
+        
+        if dist_wp < waypoint_threshold and current_wp_index < len(global_path_world) - 1:
+            current_wp_index += 1
+            wp_x, wp_y = global_path_world[current_wp_index]
+            dx = wp_x - robot_x
+            dy = wp_y - robot_y
+            dist_wp = math.hypot(dx, dy)
+
+        goal_dir = math.atan2(dy, dx)
+        LOOKAHEAD_MIN = 0.2  # Reduced for slower movement
+        LOOKAHEAD_MAX = 0.5  # Reduced for slower movement
+        look_ahead = min(LOOKAHEAD_MAX, max(LOOKAHEAD_MIN, dist_wp))
+
+        local_goal = [
+            robot_x + look_ahead * math.cos(goal_dir),
+            robot_y + look_ahead * math.sin(goal_dir)
+        ]
+
+    # ----------------------------------------------------------
+    # Direct path following (DWA removed for testing)
+    # ----------------------------------------------------------
+    # Simple proportional control to follow the local goal
+    dx_goal = local_goal[0] - robot_x
+    dy_goal = local_goal[1] - robot_y
+    dist_to_goal = math.hypot(dx_goal, dy_goal)
+    
+    # Desired heading
+    desired_heading = math.atan2(dy_goal, dx_goal)
+    heading_error = desired_heading - robot_theta
+    
+    # Normalize angle to [-pi, pi]
+    while heading_error > math.pi:
+        heading_error -= 2 * math.pi
+    while heading_error < -math.pi:
+        heading_error += 2 * math.pi
+    
+    # Simple proportional control
+    # Forward velocity based on distance and heading alignment
+    v_base = 0.3  # Base forward velocity
+    v = v_base * (1.0 - abs(heading_error) / math.pi) * min(1.0, dist_to_goal / 0.5)
+    v = max(0.0, min(v, 0.4))  # Clamp to reasonable range
+    
+    # Angular velocity to correct heading
+    w = 2.0 * heading_error  # Proportional gain
+    w = max(-2.0, min(2.0, w))  # Clamp angular velocity
+    
+    # If very close to goal, slow down
+    if dist_to_goal < 0.2:
+        v *= 0.5
+        w *= 0.5
+
+    # 바퀴 속도로 변환
+    v_left = (v - w * WHEEL_BASE / 2.0) / WHEEL_RADIUS
+    v_right = (v + w * WHEEL_BASE / 2.0) / WHEEL_RADIUS
+
+    v_left = max(min(v_left, MAX_WHEEL_SPEED), -MAX_WHEEL_SPEED)
+    v_right = max(min(v_right, MAX_WHEEL_SPEED), -MAX_WHEEL_SPEED)
+
+    left_wheel.setVelocity(v_left)
+    right_wheel.setVelocity(v_right)
+
