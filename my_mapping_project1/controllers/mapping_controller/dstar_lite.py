@@ -8,7 +8,8 @@ class DStarLite:
         grid: 2D list of 0 (free) and 1 (occupied)
         start, goal: (row, col) tuples
         """
-        self.grid = grid
+        # Deep copy grid to avoid external modifications affecting planner
+        self.grid = [row[:] for row in grid]
         self.rows = len(grid)
         self.cols = len(grid[0])
         self.start = start
@@ -39,10 +40,26 @@ class DStarLite:
     def get_neighbors(self, s):
         neighbors = []
         # 8-connected grid (including diagonals for better paths)
+        # Fix 3: Less conservative - if cell is blocked but surrounded by obstacles,
+        # allow at least 4-directional movement
         for dx, dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
             nx, ny = s[0] + dx, s[1] + dy
-            if 0 <= nx < self.rows and 0 <= ny < self.cols and self.grid[nx][ny] == 0:
-                neighbors.append((nx, ny))
+            if 0 <= nx < self.rows and 0 <= ny < self.cols:
+                # If cell is free, always add
+                if self.grid[nx][ny] == 0:
+                    neighbors.append((nx, ny))
+                # If cell is blocked, check if it's a diagonal and if cardinal directions are also blocked
+                # In that case, allow diagonal movement (less conservative)
+                elif abs(dx) == 1 and abs(dy) == 1:  # Diagonal movement
+                    # Check if both cardinal neighbors are also blocked
+                    card1_x, card1_y = s[0] + dx, s[1]
+                    card2_x, card2_y = s[0], s[1] + dy
+                    if (0 <= card1_x < self.rows and 0 <= card1_y < self.cols and 
+                        0 <= card2_x < self.rows and 0 <= card2_y < self.cols):
+                        if (self.grid[card1_x][card1_y] == 1 and 
+                            self.grid[card2_x][card2_y] == 1):
+                            # Both cardinal directions blocked, allow diagonal
+                            neighbors.append((nx, ny))
         return neighbors
 
     def cost(self, s1, s2):
@@ -90,12 +107,34 @@ class DStarLite:
             for s in neighbors:
                 self.update_vertex(s)
 
-    def plan(self, changed=[]):
+    def update_grid(self, new_grid):
+        """Update the grid with new obstacle information"""
+        self.grid = [row[:] for row in new_grid]
+    
+    def plan(self, changed=[], new_grid=None):
         # dynamic replanning entry point
         self.km += self.h(self.s_last, self.start)
         self.s_last = self.start
-        self.rescan(changed)
+        
+        # Update grid if provided
+        if new_grid is not None:
+            self.update_grid(new_grid)
+        
+        # Fix 2: If start or goal is blocked, treat as free
+        if self.grid[self.start[0]][self.start[1]] == 1:
+            self.grid[self.start[0]][self.start[1]] = 0
+        if self.grid[self.goal[0]][self.goal[1]] == 1:
+            self.grid[self.goal[0]][self.goal[1]] = 0
+        
+        # Update start position if it changed
+        if changed:
+            self.rescan(changed)
+        
         self.compute_shortest_path()
+        
+        # Check if start is reachable
+        if self.g[self.start] == float('inf') and self.rhs[self.start] == float('inf'):
+            return None  # Start is unreachable
 
         path = []
         current = self.start
@@ -104,7 +143,7 @@ class DStarLite:
         
         while current != self.goal and len(seen) < max_iterations:
             if current in seen:
-                return None  # Loop detected
+                return None  
             seen.add(current)
             path.append(current)
             
@@ -113,17 +152,31 @@ class DStarLite:
                 return None  # No valid neighbors
             
             # Find best neighbor based on g-value + cost
+            # Prefer straight paths when possible
             best_neighbor = None
             best_cost = float('inf')
+            prev_dir = None
+            if len(path) > 1:
+                # Calculate previous direction
+                prev = path[-2]
+                prev_dir = (current[0] - prev[0], current[1] - prev[1])
+            
             for s in neighbors:
+                # Check if neighbor is reachable (g-value is finite)
                 if self.g[s] < float('inf'):
                     total_cost = self.g[s] + self.cost(current, s)
+                    # Prefer continuing in same direction (small bonus)
+                    if prev_dir is not None:
+                        curr_dir = (s[0] - current[0], s[1] - current[1])
+                        if curr_dir == prev_dir:
+                            total_cost *= 0.95  # 5% bonus for straight movement
                     if total_cost < best_cost:
                         best_cost = total_cost
                         best_neighbor = s
             
             if best_neighbor is None:
-                return None  # No reachable path
+                # No reachable neighbor - path is blocked
+                return None
             
             current = best_neighbor
         
