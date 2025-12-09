@@ -3,9 +3,9 @@
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/CardboardBox.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/devices/slamtec/protos/RpLidarA2.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/rocks/protos/Rock.proto"
 
 WorldInfo {
   info [
@@ -18,8 +18,8 @@ WorldInfo {
 }
 Viewpoint {
   fieldOfView 0.660595
-  orientation -0.35886046217615875 0.13115714779090948 0.9241303865094294 2.490154059894204
-  position 8.360756990135656 -9.231191868688693 10.05693563034995
+  orientation -0.6197730082178101 0.013419276904729428 0.784666388532095 3.107621413623801
+  position 3.4186357573145845 -1.6179008837915243 15.200189817382402
   follow "Pioneer 3-DX"
 }
 TexturedBackground {
@@ -44,25 +44,30 @@ RectangleArena {
     }
   }
 }
-CardboardBox {
-  translation 0.79169 -0.352735 0.15
-  size 0.3 0.6 0.3
+Rock {
+  translation 1.74 -2.02 0
+  scale 5
+}
+Rock {
+  translation -0.95 -0.86 0
+  name "rock(1)"
+  scale 5
+}
+Rock {
+  translation 1.91 1.45 0
+  name "rock(2)"
+  scale 5
+}
+Rock {
+  translation -0.24 1.84 0
+  name "rock(3)"
+  scale 5
 }
 DEF PIONEER_3DX Pioneer3dx {
-  hidden position_0_0 0.01754293566849341
-  hidden position_0_1 37.72031795177634
-  hidden position_0_2 34.90349516542196
-  hidden translation_1 -0.1917990831423325 1.820604930128348e-08 2.427381110606254e-05
-  hidden rotation_1 0.584562681020092 -0.5737099842430188 -0.5737101410455259 2.0836099309877816
-  hidden position_1_0 -94.56110995155693
-  hidden rotation_2 1 0 0 5.969854963316455
-  hidden translation_4 1.6174238271319013e-06 0.1649999994459268 2.7419540821217585e-05
-  hidden rotation_4 0.573225675400403 -0.5732256747082948 -0.5855122978358114 2.0821952263902923
-  hidden translation_9 -1.0284611282568738e-05 -0.16500000156545552 -2.546910773934158e-05
-  hidden rotation_9 0.6332762923194193 -0.6332763561612761 0.44488447299637895 3.9787760672840737
-  translation 0 0 0
-  rotation 0.01903711550210749 -0.020747298572087503 0.999603490307692 0
+  translation 0 0 0.0968105
+  rotation 0.018842156955738282 0.00037317124792402175 0.9998224011615638 -3.1039799012121225
   controller "mapping_controller"
+  supervisor TRUE
   extensionSlot [
     Display {
       width 501
