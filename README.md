@@ -19,15 +19,12 @@ The odometry implementation remains part of the project (and works), but the Sup
 
 ---
 
-### 2. LiDAR-to-World Coordinate Transformation
-I implemented the full conversion pipeline from raw LiDAR range data to world-coordinate points:
+## 2. LiDAR-to-World Coordinate Transformation
 
-- Converting each LiDAR measurement into a 2D point  
-- Applying the robot’s current pose (from odometry) to transform those points into world space  
-- Filtering out invalid distance readings  
-- Preparing transformed points so they can be mapped onto a global occupancy grid  
+The transformation logic from LiDAR range values to world coordinates was implemented manually.
 
-Webots only provides raw distance measurements; the transformation logic is fully implemented by me.
+When converting LiDAR points to the world frame, the system uses the **Supervisor-provided robot pose** to maintain accuracy in mapping.  
+The transformation steps (local LiDAR → world coordinates → grid map) were implemented by me.
 
 ---
 
