@@ -18,8 +18,8 @@ WorldInfo {
 }
 Viewpoint {
   fieldOfView 0.660595
-  orientation -0.5999681202817402 0.012990520054143308 0.7999184339883149 3.10696113428557
-  position 3.3944739985485888 -1.628128325489729 13.722335281324977
+  orientation -0.6197730082178101 0.013419276904729428 0.784666388532095 3.107621413623801
+  position 2.971178407707651 -1.9657159923584742 15.200502441949698
   follow "Pioneer 3-DX"
 }
 TexturedBackground {
@@ -45,27 +45,35 @@ RectangleArena {
   }
 }
 Rock {
-  translation 0 -2.02 0
+  translation 1.74 -2.02 0
   scale 5
 }
 Rock {
-  translation -1.07 -2.02 0
+  translation -0.95 -0.86 0
   name "rock(1)"
   scale 5
 }
 Rock {
-  translation -1.94 -0.94 0
+  translation 1.91 1.45 0
   name "rock(2)"
   scale 5
 }
 Rock {
-  translation -1.57 -0.14 0
+  translation -0.24 1.84 0
   name "rock(3)"
   scale 5
 }
 DEF PIONEER_3DX Pioneer3dx {
-  translation 2.46997 -2.52473 -0.044976
-  rotation 0.01861537972613939 -0.006954191101579016 0.9998025339354638 2.423860959064573
+  hidden translation_1 -0.1918 0 0
+  hidden rotation_1 0.5776495686690954 -0.5772005612640421 -0.5772005612374982 2.093946108978105
+  hidden translation_2 0 -0.0521014 0.012843
+  hidden rotation_2 1 0 0 2.492948588989579
+  hidden translation_4 0 0.165 0
+  hidden rotation_4 0.6852131181422634 -0.6852131732465047 0.24691271724075345 3.6257343670572775
+  hidden translation_9 0 -0.165 0
+  hidden rotation_9 0.607045353277427 -0.6070454194806459 0.512827259173935 4.089306000919477
+  translation 0 0 0.0974262
+  rotation 0.02273083985618544 0.009770815398176114 0.9996938731861306 -2.3274464412638163
   controller "mapping_controller"
   supervisor TRUE
   extensionSlot [
