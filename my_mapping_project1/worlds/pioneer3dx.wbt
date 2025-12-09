@@ -3,9 +3,9 @@
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/CardboardBox.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/devices/slamtec/protos/RpLidarA2.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/rocks/protos/Rock.proto"
 
 WorldInfo {
   info [
@@ -18,8 +18,8 @@ WorldInfo {
 }
 Viewpoint {
   fieldOfView 0.660595
-  orientation -0.4164115402175127 -0.06276416274508659 0.9070072155438386 3.4133345766199987
-  position 10.852474426326303 0.8377493013621459 13.109528966260267
+  orientation -0.46046129581939227 -0.006147765258464283 0.8876584929096623 3.1653005067350635
+  position 9.76260029528556 -1.4089860357707789 14.322022514438853
   follow "Pioneer 3-DX"
 }
 TexturedBackground {
@@ -44,28 +44,27 @@ RectangleArena {
     }
   }
 }
-CardboardBox {
-  translation -1.48831 -0.352735 0.15
-  size 0.3 0.6 0.3
+Rock {
+  translation 0 -2.02 0
+  scale 5
 }
-CardboardBox {
-  translation -0.86831 -1.68274 0.15
-  name "cardboard box(1)"
-  size 0.3 0.6 0.3
+Rock {
+  translation -1.07 -2.02 0
+  name "rock(1)"
+  scale 5
 }
-CardboardBox {
-  translation 1.23169 -0.82273 0.15
-  name "cardboard box(2)"
-  size 0.3 0.6 0.3
+Rock {
+  translation -1.94 -0.94 0
+  name "rock(2)"
+  scale 5
 }
-CardboardBox {
-  translation -2.28831 -1.77273 0.15
-  name "cardboard box(3)"
-  size 0.3 0.6 0.3
+Rock {
+  translation -1.57 -0.14 0
+  name "rock(3)"
+  scale 5
 }
 DEF PIONEER_3DX Pioneer3dx {
   translation 9.27014e-05 -0.123262 0.0966414
-  rotation -0.012366728426565837 -0.0034280179918191587 -0.999917652969819 2.597309424722177
   controller "mapping_controller"
   supervisor TRUE
   extensionSlot [
