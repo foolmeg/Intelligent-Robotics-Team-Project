@@ -4,17 +4,18 @@ Repository for Intelligent Robotics Team Project 2025
 
 ## What I Implemented Myself
 
-### 1. Odometry Computation (Wheel Encoders → Robot Pose)
-I implemented the entire odometry module manually. This includes:
+## 1. Robot Pose Estimation (Odometry Implementation + Supervisor Ground Truth)
 
-- Reading raw wheel encoder values every timestep  
-- Computing wheel movement between updates  
-- Estimating the robot’s forward motion and rotation  
-- Updating the robot’s global pose (x, y, theta)  
-- Handling missing or invalid sensor values safely  
+I implemented a full wheel-encoder–based odometry module, including:
+- Reading encoder values
+- Computing wheel displacements
+- Estimating the robot’s forward motion and rotation
+- Updating the robot’s pose (x, y, theta)
 
-Webots does not provide the robot’s pose directly.  
-Everything related to computing the pose from encoder values was implemented by me.
+However, for the final mapping and navigation module, the system uses the **Supervisor’s ground-truth pose** instead of the odometry estimate.  
+This choice was made because the standard Robot controller cannot access accurate global pose information, and the project requires stable pose data for mapping and planning.
+
+The odometry implementation remains part of the project (and works), but the Supervisor pose is used during actual execution.
 
 ---
 
@@ -60,7 +61,3 @@ These components provide sensor data—the processing and mapping logic was impl
 - `numpy`  
 
 Used only for basic math operations.
-
----
-
-## Project Structure (Example)
