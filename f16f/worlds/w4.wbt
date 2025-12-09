@@ -1,0 +1,127 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/apartment_structure/protos/Wall.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/bathroom/protos/WashingMachine.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/bedroom/protos/Bed.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/humans/pedestrian/protos/Pedestrian.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation 0.5072795006525941 -0.4057389119123264 -0.7602916832228643 4.210914293090166
+  position 4.492652616561985 -15.139581559469573 39.928964279580114
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 18 18
+  floorTileSize 1 1
+  wallHeight 0.6
+}
+DEF human Pedestrian {
+  translation 0.88 0 1.27
+  rotation 0 0 1 1.5708
+}
+Bed {
+  translation -7.75996 -7.5 0
+  rotation 0 0 1 4.692820414042842e-06
+}
+Bed {
+  translation -7.75996 -4.5 0
+  rotation 0 0 1 4.692820414042842e-06
+  name "bed(1)"
+}
+Bed {
+  translation 2.04004 -6.8 0
+  rotation 0 0 1 1.5708
+  name "bed(2)"
+}
+Bed {
+  translation 5.47004 -6.8 0
+  rotation 0 0 1 1.5708
+  name "bed(3)"
+}
+Bed {
+  translation 5.49004 6.72 0
+  rotation 0 0 1 -1.5707953071795862
+  name "bed(4)"
+}
+Bed {
+  translation 2.04004 6.72 0
+  rotation 0 0 1 -1.5707953071795862
+  name "bed(5)"
+}
+WashingMachine {
+  translation -8 1 0.5
+  name "whashing machine(1)"
+}
+WashingMachine {
+  translation -8 -1.01 0.5
+  name "whashing machine(2)"
+}
+Wall {
+  translation -9 0 0
+  size 0.2 18 2.4
+}
+Wall {
+  translation 9 0 0
+  name "wall(1)"
+  size 0.2 18 2.4
+}
+Wall {
+  translation 0 9 0
+  rotation 0 0 1 1.5708
+  name "wall(2)"
+  size 0.2 18 2.4
+}
+Wall {
+  translation 0 -9 0
+  rotation 0 0 1 1.5708
+  name "wall(3)"
+  size 0.2 18 2.4
+}
+Wall {
+  translation -4 2.25 0
+  rotation 0 0 1 1.5708
+  name "wall(4)"
+  size 0.2 10 2.4
+}
+Wall {
+  translation 7.01 2.25 0
+  rotation 0 0 1 1.5708
+  name "wall(5)"
+  size 0.2 4 2.4
+}
+Wall {
+  translation -1.25 -5 0
+  rotation 0 0 -1 -5.307179586466759e-06
+  name "wall(6)"
+  size 0.2 8 2.4
+}
+Pioneer3dx {
+  translation -8.18 8.29 0.0975
+  controller "my_controller_2"
+  supervisor TRUE
+  extensionSlot [
+    DEF ds DistanceSensor {
+      rotation 0 0 1 4.692820414042842e-06
+      name "ds"
+      lookupTable [
+        0 0 0
+        1 1000 0
+      ]
+    }
+    DEF imu InertialUnit {
+      name "imu"
+    }
+    GPS {
+      translation -0.04 0 0
+    }
+  ]
+}
