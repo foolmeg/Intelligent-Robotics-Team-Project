@@ -5,6 +5,7 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/RectangleArena.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/devices/slamtec/protos/RpLidarA2.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/rocks/protos/Rock.proto"
 
 WorldInfo {
   info [
@@ -14,8 +15,8 @@ WorldInfo {
   title "Pioneer Navigation"
 }
 Viewpoint {
-  orientation -0.5793744781954075 -0.004116245413480105 0.8150510846195442 3.1532022581937507
-  position 3.699565395278818 -0.13215055001520323 10.518136976177235
+  orientation -0.6764533538769899 -0.008190315100917958 0.7364399356139776 3.1594497807998048
+  position 1.4615942742083825 0.11030351219688599 16.832377658787113
   follow "Pioneer3dx"
   followType "None"
 }
@@ -30,8 +31,12 @@ RectangleArena {
   wallThickness 0.05
   wallHeight 0.4
 }
+Rock {
+  translation -1.07 1.93 0.25
+  scale 5
+}
 Robot {
-  translation -1.58 2.05 1.27
+  translation -0.82 -0.97 1.27
   children [
     Group {
     }
@@ -364,7 +369,8 @@ DEF GOAL Solid {
   name "goal_marker"
 }
 Pioneer3dx {
-  translation 0 0 0
+  translation 0 0 0.09
+  rotation 0 0 1 -3.141592653589793
   name "Pioneer3dx"
   controller "main_controller"
   supervisor TRUE

@@ -15,8 +15,8 @@ WorldInfo {
   title "Pioneer Navigation"
 }
 Viewpoint {
-  orientation -0.6764533538769899 -0.008190315100917958 0.7364399356139776 3.1594497807998048
-  position 1.0077653310974453 0.0992160862563772 11.495804988766787
+  orientation -0.6602050883828352 0.0006722636008052678 0.7510850746320711 3.1400880134293723
+  position 1.8068547966547677 0.14644713554660696 12.389319061091967
   follow "Pioneer3dx"
   followType "None"
 }
@@ -33,6 +33,21 @@ RectangleArena {
 }
 Rock {
   translation -1.07 -1.05 0.25
+  scale 5
+}
+Rock {
+  translation -1.46 1.65 0.25
+  name "rock(1)"
+  scale 5
+}
+Rock {
+  translation 1.49 -1.84 0.25
+  name "rock(2)"
+  scale 5
+}
+Rock {
+  translation 1.87 1.9 0.25
+  name "rock(3)"
   scale 5
 }
 Robot {
