@@ -23,12 +23,6 @@ The `astar` folder contains the baseline implementation using a **static A\*** a
 - During the main loop, the robot simply follows this fixed path using a differential-drive controller and basic speed/heading control.
 - There is **no global replanning** when the environment changes.
 
-### How to run
-
-1. Open `astar/astar_map.wbt` in Webots.  
-2. Set the Pioneer 3-DX node’s controller to `astar_controller`.  
-3. Run the simulation – the robot follows the pre-planned A* path from start to goal.
-
 ---
 
 ## 2. `dstar 1/` – D* Lite Structure (Static Map, No True Dynamic Obstacles)
@@ -52,12 +46,6 @@ However, in this version:
 - `plan()` is typically called with an empty set of changed cells, so no meaningful incremental replanning happens.
 
 As a result, even though the algorithm *looks* like D* Lite, it still behaves like **static planning** with no real dynamic obstacle avoidance.
-
-### How to run
-
-1. Open `dstar 1/w3.wbt` in Webots.  
-2. Attach `my_controller.py` as the controller for the Pioneer 3-DX robot (e.g., by creating a `my_controller` Webots controller that runs this script).  
-3. Run the simulation to observe planning with the D* Lite structure on a fixed map.
 
 ---
 
@@ -83,15 +71,6 @@ Compared to `dstar 1`, this version:
 - With the `moving_obstacle` controller attached to an obstacle node, the world contains **dynamic obstacles**. When the obstacle moves or is newly detected, the planner updates its map and replans around it.
 
 In this way, `dstar 2` is the first folder that implements **true D\* Lite behavior** with dynamic replanning.
-
-### How to run
-
-1. Open `dstar 2/dstar_map.wbt` in Webots.  
-2. Set the Pioneer 3-DX robot’s controller to `dstar_controller`.  
-3. For the moving obstacle node, set its controller to `moving_obstacle` (if you want dynamic behavior).  
-4. Run the simulation:
-   - Initially, the robot follows a path computed on the known map.  
-   - When obstacles move or new obstacles are sensed, D\* Lite incrementally updates the path and the robot tries to avoid them.
 
 ---
 
