@@ -1,4 +1,4 @@
-## What I Implemented Myself  
+## What I Implemented 
 
 ### 1. Static A* Path Planner on a Known Grid Map  
 
