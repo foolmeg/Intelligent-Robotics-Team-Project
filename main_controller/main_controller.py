@@ -5,8 +5,23 @@ This controller integrates:
 - LiDAR-based occupancy grid mapping
 - D* Lite global path planning
 - Dynamic Window Approach (DWA) local motion planning
+- Wheel encoder-based odometry (implemented but supervisor ground truth used)
 
-The robot navigates to a goal position while dynamically avoiding obstacles.
+Robot Pose Estimation:
+    We implemented a full wheel-encoder-based odometry module, including:
+    - Reading encoder values
+    - Computing wheel displacements
+    - Estimating the robot's forward motion and rotation
+    - Updating the robot's pose (x, y, theta)
+    
+    However, for the final mapping and navigation module, the system uses the
+    Supervisor's ground-truth pose instead of the odometry estimate.
+    This choice was made because the standard Robot controller cannot access
+    accurate global pose information, and the project requires stable pose
+    data for mapping and planning.
+    
+    The odometry implementation remains part of the project (and works), but
+    the Supervisor pose is used during actual execution.
 """
 
 import sys
@@ -23,16 +38,155 @@ from dwa_planner import DWAPlanner
 from utils import normalize_angle, euclidean_distance
 
 
+class OdometryEstimator:
+    """
+    Wheel encoder-based odometry for pose estimation.
+    
+    This class implements dead reckoning using wheel encoders to estimate
+    the robot's position and orientation. While functional, it accumulates
+    drift over time, which is why supervisor ground truth is preferred
+    for the navigation system.
+    """
+    
+    def __init__(self, wheel_radius: float, axle_length: float):
+        """
+        Initialize the odometry estimator.
+        
+        Args:
+            wheel_radius: Radius of the wheels in meters
+            axle_length: Distance between the wheels (wheel separation) in meters
+        """
+        self.wheel_radius = wheel_radius
+        self.axle_length = axle_length
+        
+        # Estimated pose (x, y, theta)
+        self.x = 0.0
+        self.y = 0.0
+        self.theta = 0.0
+        
+        # Previous encoder readings (in radians)
+        self.prev_left_position = 0.0
+        self.prev_right_position = 0.0
+        
+        # Flag to track if initialized
+        self.initialized = False
+        
+        # Accumulated distance traveled
+        self.total_distance = 0.0
+    
+    def initialize(self, x: float, y: float, theta: float,
+                   left_position: float, right_position: float):
+        """
+        Initialize odometry with known pose and encoder positions.
+        
+        Args:
+            x, y, theta: Initial pose
+            left_position: Initial left wheel encoder position (radians)
+            right_position: Initial right wheel encoder position (radians)
+        """
+        self.x = x
+        self.y = y
+        self.theta = theta
+        self.prev_left_position = left_position
+        self.prev_right_position = right_position
+        self.initialized = True
+        self.total_distance = 0.0
+        print(f"Odometry initialized at ({x:.3f}, {y:.3f}, {math.degrees(theta):.1f}°)")
+    
+    def update(self, left_position: float, right_position: float) -> Tuple[float, float, float]:
+        """
+        Update pose estimate based on new encoder readings.
+        
+        Uses differential drive kinematics:
+        - Compute wheel displacements from encoder differences
+        - Calculate linear and angular displacement
+        - Update pose using motion model
+        
+        Args:
+            left_position: Current left wheel encoder position (radians)
+            right_position: Current right wheel encoder position (radians)
+            
+        Returns:
+            Updated pose (x, y, theta)
+        """
+        if not self.initialized:
+            # Store initial readings and wait for next update
+            self.prev_left_position = left_position
+            self.prev_right_position = right_position
+            self.initialized = True
+            return (self.x, self.y, self.theta)
+        
+        # Compute wheel position changes (in radians)
+        delta_left = left_position - self.prev_left_position
+        delta_right = right_position - self.prev_right_position
+        
+        # Convert to linear distances traveled by each wheel
+        dist_left = delta_left * self.wheel_radius
+        dist_right = delta_right * self.wheel_radius
+        
+        # Compute robot displacement using differential drive model
+        # Linear displacement (forward motion)
+        delta_s = (dist_left + dist_right) / 2.0
+        
+        # Angular displacement (rotation)
+        delta_theta = (dist_right - dist_left) / self.axle_length
+        
+        # Update pose using midpoint integration
+        # This is more accurate than simple Euler integration for curved paths
+        if abs(delta_theta) < 1e-6:
+            # Approximately straight motion
+            self.x += delta_s * math.cos(self.theta)
+            self.y += delta_s * math.sin(self.theta)
+        else:
+            # Curved motion - use arc model
+            radius = delta_s / delta_theta
+            self.x += radius * (math.sin(self.theta + delta_theta) - math.sin(self.theta))
+            self.y -= radius * (math.cos(self.theta + delta_theta) - math.cos(self.theta))
+        
+        # Update heading
+        self.theta = normalize_angle(self.theta + delta_theta)
+        
+        # Track total distance
+        self.total_distance += abs(delta_s)
+        
+        # Store current positions for next update
+        self.prev_left_position = left_position
+        self.prev_right_position = right_position
+        
+        return (self.x, self.y, self.theta)
+    
+    def get_pose(self) -> Tuple[float, float, float]:
+        """Get current estimated pose."""
+        return (self.x, self.y, self.theta)
+    
+    def reset(self, x: float = 0.0, y: float = 0.0, theta: float = 0.0):
+        """Reset odometry to a known pose."""
+        self.x = x
+        self.y = y
+        self.theta = theta
+        self.total_distance = 0.0
+
+
 class Pioneer3DXController:
     """
     Main navigation controller for the Pioneer 3-DX robot.
     
     Integrates perception, mapping, global planning, and local control
     for autonomous navigation with dynamic obstacle avoidance.
+    
+    Supports both odometry-based and supervisor ground truth pose estimation,
+    with ground truth being used by default for better accuracy.
     """
     
-    def __init__(self):
-        """Initialize the controller and all components."""
+    def __init__(self, use_ground_truth: bool = True):
+        """
+        Initialize the controller and all components.
+        
+        Args:
+            use_ground_truth: If True, use Supervisor ground truth pose.
+                              If False, use wheel encoder odometry.
+        """
+        self.use_ground_truth = use_ground_truth
         
         # Initialize Webots Supervisor (for ground truth pose)
         self.robot = Supervisor()
@@ -42,6 +196,8 @@ class Pioneer3DXController:
         self.robot_node = self.robot.getSelf()
         if self.robot_node is None:
             print("Warning: Could not get robot node. Make sure supervisor=TRUE")
+            print("Falling back to odometry-based pose estimation.")
+            self.use_ground_truth = False
         
         # Initialize motors
         self.left_motor = self.robot.getDevice('left wheel')
@@ -53,10 +209,24 @@ class Pioneer3DXController:
         self.left_motor.setVelocity(0.0)
         self.right_motor.setVelocity(0.0)
         
+        # Initialize wheel position sensors (encoders) for odometry
+        self.left_encoder = self.robot.getDevice('left wheel sensor')
+        self.right_encoder = self.robot.getDevice('right wheel sensor')
+        
+        if self.left_encoder and self.right_encoder:
+            self.left_encoder.enable(self.timestep)
+            self.right_encoder.enable(self.timestep)
+            print("Wheel encoders initialized")
+        else:
+            print("Warning: Wheel encoders not found!")
+        
         # Pioneer 3-DX wheel parameters
         self.wheel_radius = 0.0975  # meters
         self.axle_length = 0.381    # meters (wheel separation)
         self.max_wheel_speed = 6.28  # rad/s
+        
+        # Initialize odometry estimator
+        self.odometry = OdometryEstimator(self.wheel_radius, self.axle_length)
         
         # Initialize LiDAR
         self.lidar = self.robot.getDevice('lidar')
@@ -70,12 +240,10 @@ class Pioneer3DXController:
             print("ERROR: LiDAR not found! Navigation will fail.")
         
         # Initialize occupancy grid
-        # Grid covers 10m x 10m area centered at origin
-        # Using 0.1m resolution for speed (100x100 = 10,000 cells vs 200x200 = 40,000)
         self.grid = OccupancyGrid(
             width=10.0,
             height=10.0,
-            resolution=0.1,  # 10cm resolution (faster than 5cm)
+            resolution=0.1,
             origin=(-5.0, -5.0)
         )
         
@@ -84,23 +252,20 @@ class Pioneer3DXController:
         
         # Initialize local planner with tuned parameters
         self.local_planner = DWAPlanner()
-        self.local_planner.debug = True  # Enable debug output
+        self.local_planner.debug = True
         
-        # ============================================================
-        # DWA PARAMETER TUNING - ADJUSTED FOR OBSTACLE AVOIDANCE
-        # ============================================================
-        # Weights: lower heading = willing to turn away from goal to avoid obstacles
+        # DWA weights
         self.local_planner.set_weights(
-            heading=0.3,      # LOW - allow turning away from goal
-            clearance=1.0,    # Prefer safer paths
-            velocity=1.0,     # HIGH - prefer moving forward
-            path=0.5          # Somewhat follow global path
+            heading=0.3,
+            clearance=1.0,
+            velocity=1.0,
+            path=0.5
         )
         
         # Safety parameters
         self.local_planner.set_safety_params(
-            min_clearance=0.08,   # was 0.15
-            robot_radius=0.22     # was 0.25
+            min_clearance=0.08,
+            robot_radius=0.22
         )
         
         # Robot kinematic limits
@@ -118,17 +283,20 @@ class Pioneer3DXController:
         self.goal_reached = False
         
         # Control parameters
-        self.goal_tolerance = 0.25  # meters
-        self.replan_distance = 0.3  # Replan if robot deviates this much from path
+        self.goal_tolerance = 0.25
+        self.replan_distance = 0.3
         
         # Update frequencies
-        self.map_update_interval = 3     # Update map every N cycles
-        self.path_check_interval = 10    # Check path validity every N cycles
-        self.replan_interval = 50        # Force replan every N cycles
+        self.map_update_interval = 3
+        self.path_check_interval = 10
+        self.replan_interval = 50
         
         # Counters
         self.control_cycle = 0
         
+        # Print pose estimation mode
+        pose_mode = "Supervisor Ground Truth" if self.use_ground_truth else "Wheel Encoder Odometry"
+        print(f"Pose Estimation: {pose_mode}")
         print("Pioneer 3-DX Navigation Controller initialized")
         print("=" * 50)
     
@@ -145,6 +313,51 @@ class Pioneer3DXController:
         
         return (x, y, theta)
     
+    def get_odometry_pose(self) -> Tuple[float, float, float]:
+        """Get pose estimate from wheel encoder odometry."""
+        if self.left_encoder and self.right_encoder:
+            left_pos = self.left_encoder.getValue()
+            right_pos = self.right_encoder.getValue()
+            return self.odometry.update(left_pos, right_pos)
+        return self.odometry.get_pose()
+    
+    def get_pose(self) -> Tuple[float, float, float]:
+        """
+        Get current robot pose.
+        
+        Uses supervisor ground truth if available and enabled,
+        otherwise falls back to odometry.
+        
+        Returns:
+            Robot pose (x, y, theta)
+        """
+        if self.use_ground_truth and self.robot_node is not None:
+            return self.get_ground_truth_pose()
+        else:
+            return self.get_odometry_pose()
+    
+    def initialize_odometry(self):
+        """
+        Initialize odometry with ground truth pose.
+        
+        This is called at startup to align odometry with the actual robot pose.
+        Even when using ground truth for navigation, we keep odometry updated
+        for comparison and potential fallback.
+        """
+        if self.left_encoder and self.right_encoder:
+            # Get ground truth pose
+            gt_pose = self.get_ground_truth_pose()
+            
+            # Get current encoder positions
+            left_pos = self.left_encoder.getValue()
+            right_pos = self.right_encoder.getValue()
+            
+            # Initialize odometry
+            self.odometry.initialize(
+                gt_pose[0], gt_pose[1], gt_pose[2],
+                left_pos, right_pos
+            )
+    
     def get_lidar_data(self) -> Tuple[List[float], List[float]]:
         """Get LiDAR range and angle data."""
         if self.lidar is None:
@@ -157,19 +370,13 @@ class Pioneer3DXController:
         
         angles = []
         for i in range(num_beams):
-            # Angles from -fov/2 to +fov/2
             angle = -fov / 2 + (i / max(num_beams - 1, 1)) * fov
             angles.append(angle)
         
         return (ranges, angles)
     
     def update_map(self, pose: Tuple[float, float, float]) -> bool:
-        """
-        Update the occupancy grid with new LiDAR scan.
-        
-        Returns:
-            True if map changed significantly
-        """
+        """Update the occupancy grid with new LiDAR scan."""
         ranges, angles = self.get_lidar_data()
         if not ranges:
             return False
@@ -177,7 +384,6 @@ class Pioneer3DXController:
         max_range = self.lidar.getMaxRange() if self.lidar else 5.0
         changed_cells = self.grid.update(pose, ranges, angles, max_range)
         
-        # Update global planner with map changes
         if changed_cells:
             self.global_planner.update_map(changed_cells)
             return True
@@ -201,16 +407,17 @@ class Pioneer3DXController:
         self.right_motor.setVelocity(0.0)
     
     def initialize_map(self, num_scans: int = 20):
-        """
-        Initialize the occupancy grid by taking multiple scans.
-        This helps detect static obstacles before planning.
-        """
+        """Initialize the occupancy grid by taking multiple scans."""
         print("Initializing map with LiDAR scans...")
         
         for i in range(num_scans):
             self.robot.step(self.timestep)
-            pose = self.get_ground_truth_pose()
+            pose = self.get_pose()
             self.update_map(pose)
+            
+            # Also update odometry during initialization
+            if self.left_encoder and self.right_encoder:
+                self.get_odometry_pose()
         
         print(f"Map initialized with {num_scans} scans")
     
@@ -220,18 +427,15 @@ class Pioneer3DXController:
         self.is_navigating = True
         self.goal_reached = False
         
-        # Make sure map is up to date
-        pose = self.get_ground_truth_pose()
+        pose = self.get_pose()
         self.update_map(pose)
         
-        # Debug: Check start and goal cells
+        # Debug info
         start_cell = self.grid.world_to_grid(pose[0], pose[1])
         goal_cell = self.grid.world_to_grid(goal[0], goal[1])
         print(f"Start cell: {start_cell}, Goal cell: {goal_cell}")
-        print(f"Start status: {self.grid.debug_cell(pose[0], pose[1])}")
-        print(f"Goal status: {self.grid.debug_cell(goal[0], goal[1])}")
         
-        # Plan path using D* Lite
+        # Plan path
         self.current_path = self.global_planner.plan(
             (pose[0], pose[1]), goal
         )
@@ -240,20 +444,14 @@ class Pioneer3DXController:
             print(f"Path planned: {len(self.current_path)} waypoints")
         else:
             print(f"WARNING: No path found to goal {goal}")
-            print("Will use DWA to navigate directly toward goal...")
     
     def get_local_goal(self, pose: Tuple[float, float, float]) -> Tuple[float, float]:
-        """
-        Get the next local goal from the global path.
-        Uses lookahead distance to find a point ahead on the path.
-        """
-        # If no path, navigate directly to final goal
+        """Get the next local goal from the global path."""
         if not self.current_path or len(self.current_path) < 2:
             return self.goal if self.goal else (pose[0], pose[1])
         
         x, y = pose[0], pose[1]
         
-        # Find closest point on path
         min_dist = float('inf')
         closest_idx = 0
         
@@ -263,15 +461,13 @@ class Pioneer3DXController:
                 min_dist = dist
                 closest_idx = i
         
-        # Look ahead on the path
-        lookahead_dist = 0.6  # meters
+        lookahead_dist = 0.6
         
         for i in range(closest_idx, len(self.current_path)):
             px, py = self.current_path[i]
             if euclidean_distance((x, y), (px, py)) > lookahead_dist:
                 return (px, py)
         
-        # Return last point if near end of path
         return self.current_path[-1]
     
     def check_path_blocked(self, pose: Tuple[float, float, float]) -> bool:
@@ -279,7 +475,6 @@ class Pioneer3DXController:
         if not self.current_path:
             return False
         
-        # Check each path waypoint against inflated obstacles
         for px, py in self.current_path:
             cell = self.grid.world_to_grid(px, py)
             if self.grid.is_occupied_inflated(cell[0], cell[1]):
@@ -288,20 +483,26 @@ class Pioneer3DXController:
         return False
     
     def navigation_step(self) -> bool:
-        """
-        Execute one navigation control cycle.
-        
-        Returns:
-            True if navigation is complete
-        """
+        """Execute one navigation control cycle."""
         if not self.is_navigating or self.goal is None:
             return True
         
         self.control_cycle += 1
         
-        # Get current pose
-        pose = self.get_ground_truth_pose()
+        # Get current pose (uses ground truth or odometry based on config)
+        pose = self.get_pose()
         x, y, theta = pose
+        
+        # Also update odometry even if using ground truth (for comparison)
+        if self.use_ground_truth and self.left_encoder and self.right_encoder:
+            odom_pose = self.get_odometry_pose()
+            
+            # Periodically compare odometry vs ground truth
+            if self.control_cycle % 100 == 0:
+                gt_pose = self.get_ground_truth_pose()
+                odom_error = euclidean_distance((odom_pose[0], odom_pose[1]), 
+                                                 (gt_pose[0], gt_pose[1]))
+                print(f"Odometry drift: {odom_error:.3f}m after {self.odometry.total_distance:.2f}m traveled")
         
         # Check if goal reached
         dist_to_goal = euclidean_distance((x, y), self.goal)
@@ -315,7 +516,7 @@ class Pioneer3DXController:
         
         # Update map periodically
         if self.control_cycle % self.map_update_interval == 0:
-            map_changed = self.update_map(pose)
+            self.update_map(pose)
         
         # Check if path needs replanning
         needs_replan = False
@@ -325,11 +526,9 @@ class Pioneer3DXController:
                 print("Path blocked! Replanning...")
                 needs_replan = True
         
-        # Periodic replanning
         if self.control_cycle % self.replan_interval == 0:
             needs_replan = True
         
-        # Replan if needed
         if needs_replan:
             self.current_path = self.global_planner.replan((x, y))
             if self.current_path:
@@ -340,29 +539,6 @@ class Pioneer3DXController:
         
         # Get LiDAR data
         ranges, angles = self.get_lidar_data()
-        
-        # Debug: Find actual closest obstacle in ANY direction
-        if self.control_cycle % 30 == 0 and ranges and angles:
-            min_dist = float('inf')
-            min_angle = 0
-            for i, (r, a) in enumerate(zip(ranges, angles)):
-                if 0.05 < r < min_dist and not math.isinf(r):
-                    min_dist = r
-                    min_angle = a
-            
-            # Also check what's in the direction we're heading (toward goal)
-            goal_angle = math.atan2(local_goal[1] - y, local_goal[0] - x) - theta
-            goal_angle = math.atan2(math.sin(goal_angle), math.cos(goal_angle))  # normalize
-            
-            # Find beams near goal direction
-            goal_dir_dist = float('inf')
-            for r, a in zip(ranges, angles):
-                angle_diff = abs(math.atan2(math.sin(a - goal_angle), math.cos(a - goal_angle)))
-                if angle_diff < 0.3 and 0.05 < r < goal_dir_dist and not math.isinf(r):  # ~17 degree cone
-                    goal_dir_dist = r
-            
-            print(f"Closest obs: {min_dist:.2f}m at {math.degrees(min_angle):.0f}°, "
-                  f"Goal dir obs: {goal_dir_dist:.2f}m, Goal angle: {math.degrees(goal_angle):.0f}°")
         
         # Compute velocity command using DWA
         v, w = self.local_planner.compute_velocity_command(
@@ -395,16 +571,17 @@ class Pioneer3DXController:
         for _ in range(5):
             self.robot.step(self.timestep)
         
-        # Initialize map by scanning environment (fewer scans = faster)
+        # Initialize odometry with ground truth
+        self.initialize_odometry()
+        
+        # Initialize map
         self.initialize_map(num_scans=10)
         
         # Get initial pose
-        initial_pose = self.get_ground_truth_pose()
+        initial_pose = self.get_pose()
         print(f"Start: ({initial_pose[0]:.2f}, {initial_pose[1]:.2f})")
         
-        # ============================================================
-        # SET YOUR GOAL HERE
-        # ============================================================
+        # Set goal
         goal = (-2.0, -2.0)
         print(f"Goal:  ({goal[0]:.2f}, {goal[1]:.2f})")
         print("=" * 50 + "\n")
@@ -414,7 +591,6 @@ class Pioneer3DXController:
         # Main loop
         while self.robot.step(self.timestep) != -1:
             if self.navigation_step():
-                # Navigation complete - wait and exit
                 for _ in range(100):
                     self.robot.step(self.timestep)
                 break
@@ -424,5 +600,6 @@ class Pioneer3DXController:
 
 # Entry point
 if __name__ == "__main__":
-    controller = Pioneer3DXController()
+    # Set use_ground_truth=False to use odometry instead
+    controller = Pioneer3DXController(use_ground_truth=True)
     controller.run()

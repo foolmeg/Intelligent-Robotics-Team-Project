@@ -118,6 +118,6 @@ Used only for hardware-level access:
 Used only for basic math operations.
 
 ### References
-https://github.com/AtsushiSakai/PythonRobotics/tree/master/PathPlanning/DynamicWindowApproach
-https://ieeexplore.ieee.org/document/580977
+- https://github.com/AtsushiSakai/PythonRobotics/tree/master/PathPlanning/DynamicWindowApproach
+- https://ieeexplore.ieee.org/document/580977
 
