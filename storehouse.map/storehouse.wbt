@@ -1,0 +1,356 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/ThreadMetalPlate.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/Roughcast.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/stairs/protos/StraightStairs.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/GalvanizedMetal.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/stairs/protos/StraightStairsRail.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/WoodenBox.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/PlasticCrate.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/TrafficCone.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/obstacles/protos/OilBarrel.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/CardboardBox.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/tools/protos/PlatformCart.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/pallet/protos/WoodenPalletStack.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/toys/protos/RubberDuck.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/conveyors/protos/ConveyorBelt.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/fujitsu/hoap2/protos/Hoap2.proto"
+
+WorldInfo {
+  info [
+    "Simulation of Boston Dynamics' Spot robot in a simple industrial environment."
+    "The robot is saying hello with its right leg."
+  ]
+  title "Spot Robot demo"
+}
+Viewpoint {
+  orientation -0.21999658411793935 0.1762362301278297 0.9594489533929198 1.8310053921057674
+  position -0.8133618710891484 0.04684200798286042 1.1625539479718026
+  followType "None"
+  followSmoothness 0
+}
+TexturedBackground {
+  texture "factory"
+  skybox FALSE
+}
+TexturedBackgroundLight {
+  texture "factory"
+}
+RectangleArena {
+  translation 0 -0.09 0
+  floorSize 10 10
+  floorAppearance ThreadMetalPlate {
+    textureTransform TextureTransform {
+      scale 0.7 0.7
+    }
+  }
+  wallThickness 0.1
+  wallHeight 3.4
+  wallAppearance Roughcast {
+    colorOverride 0.662745 0.662745 0.662745
+    textureTransform TextureTransform {
+      scale 10 10
+    }
+  }
+}
+ConveyorBelt {
+  hidden translation_1 0 0 0.4498588729734198
+  translation -2.39578 -0.234293 0
+  rotation 0 0 1 -1.047195307179586
+  size 5.3 0.6 0.6
+}
+WoodenBox {
+  translation -4.7 0.62 0.3
+  name "wooden box(3)"
+  size 0.6 1.9 0.6
+}
+WoodenBox {
+  translation -4.7 -1.26 0.3
+  name "wooden box(4)"
+  size 0.6 1.9 0.6
+}
+StraightStairs {
+  translation -1.8 4.36 0
+  name "straight stairs(2)"
+  stepSize 0.3 1.2 0.03
+  stepRise 0.1667
+  nSteps 14
+  stepAppearance GalvanizedMetal {
+    textureTransform TextureTransform {
+      scale 0.3 1
+    }
+  }
+  stringerAppearance GalvanizedMetal {
+    textureTransform TextureTransform {
+      scale 4 8
+    }
+  }
+  leftRail [
+    StraightStairsRail {
+      run 4.2
+      rise 2.338
+      balusterHeight 0.5
+      balusterRadius 0.019
+      nBalusters 3
+      appearance GalvanizedMetal {
+        textureTransform TextureTransform {
+          scale 4 8
+        }
+      }
+    }
+  ]
+  rightRail [
+    StraightStairsRail {
+      run 4.2
+      rise 2.338
+      balusterHeight 0.5
+      balusterRadius 0.019
+      nBalusters 3
+      appearance GalvanizedMetal {
+        textureTransform TextureTransform {
+          scale 4 8
+        }
+      }
+    }
+  ]
+}
+WoodenBox {
+  translation 0.821339 4.12919 0.3
+  rotation 0 0 -1 0.19635
+}
+WoodenBox {
+  translation 1.70404 3.95367 0.3
+  rotation 0 0 1 0.0654494
+  name "wooden box(1)"
+}
+WoodenBox {
+  translation 1.16604 4.05875 0.9
+  rotation 0 0 1 0.0654494
+  name "wooden box(2)"
+}
+PlasticCrate {
+  translation -0.276141 -3.89221 0
+  rotation 0 0 -1 0.916294
+  size 0.3 0.5 0.2
+}
+PlasticCrate {
+  translation -0.665747 -3.38443 0
+  rotation 0 0 -1 0.916294
+  name "plastic crate(1)"
+  size 0.3 0.5 0.2
+}
+TrafficCone {
+  translation 4.63526 -3.89768 0.228719
+  rotation 0.0003109999849598856 -0.9999999516395034 0 1.997414
+}
+TrafficCone {
+  translation 3.38354 -3.49778 0
+  rotation 0 0 -1 1.0472
+  name "traffic cone(1)"
+}
+TrafficCone {
+  translation 4.09265 -3.13193 0
+  rotation 0 0 1 -1.047195307179586
+  name "traffic cone(2)"
+}
+TrafficCone {
+  translation 3.98473 -4.41983 0
+  rotation 0 0 1 -1.047195307179586
+  name "traffic cone(3)"
+}
+OilBarrel {
+  translation 4.67 0 0.44
+}
+OilBarrel {
+  translation 4.69 -0.68 0.44
+  name "oil barrel(1)"
+}
+OilBarrel {
+  translation 4.53 -1.34 0.44
+  name "oil barrel(2)"
+}
+OilBarrel {
+  translation 4.05 -0.22 0.44
+  name "oil barrel(3)"
+}
+OilBarrel {
+  translation 3.89 -1.04 0.44
+  name "oil barrel(4)"
+}
+OilBarrel {
+  translation 4.36 -1.04 1.32
+  name "oil barrel(5)"
+}
+OilBarrel {
+  translation 4.25 -0.27 1.32
+  name "oil barrel(6)"
+}
+CardboardBox {
+  translation 1.71781 -4.16794 0.28
+  rotation 0 0 1 -0.785395307179586
+  name "cardboard box(4)"
+  size 0.3 0.3 0.3
+}
+CardboardBox {
+  translation 1.47741 -4.40834 0.28
+  rotation 0 0 1 -0.785395307179586
+  name "cardboard box(5)"
+  size 0.3 0.3 0.3
+}
+PlatformCart {
+  hidden position_0_0 0.01579379684525545
+  hidden position2_0_0 -11.187520463820952
+  hidden position_0_1 -0.012949644727530022
+  hidden position2_0_1 -5.786098330429175
+  hidden position_0_2 -5.7043564465864485
+  hidden position_0_3 -5.570251077639091
+  hidden rotation_2 0.6485902552359923 0.5433355065599004 -0.533026460998145 1.978908975778941
+  hidden rotation_3 -0.9413539803796578 -0.23242918210592275 0.24460040664100877 4.648705807968868
+  hidden rotation_4 -0.9216141804985399 -0.2744328233093018 0.2744338313592003 4.630847218008753
+  hidden rotation_5 -0.8848085434520624 -0.3294791677257982 0.32948037797258123 4.590305711057814
+  translation 1.8055921815517562 -4.159710448647444 -0.0030075402064466683
+  rotation 0.0006598570749536174 0.0002669408692363654 0.9999997466655743 -2.375951587070495
+}
+WoodenPalletStack {
+  translation 4.33683 1.57306 0
+}
+WoodenPalletStack {
+  translation 4.45255 2.90052 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wooden pallet stack(1)"
+}
+WoodenPalletStack {
+  translation 4.32255 4.33052 0
+  rotation 0 0 1 -1.5707953071795862
+  name "wooden pallet stack(2)"
+}
+RubberDuck {
+  translation -0.3180880356158562 -1.7320820356146986 0.05988432768756985
+  rotation 4.42783228636397e-07 -1.0689979700643348e-06 0.9999999999993305 0.7853820000004728
+  scale 3
+}
+CardboardBox {
+}
+CardboardBox {
+  translation 1.38 0 0.3
+  name "cardboard box(2)"
+}
+CardboardBox {
+  translation -0.61 0 0.3
+  name "cardboard box(1)"
+}
+Hoap2 {
+  hidden position_0_0 -7.958116077908706e-08
+  hidden position_0_1 -0.18675751034921587
+  hidden position_0_2 0.18675846624145936
+  hidden position_0_3 -1.2484030140363179e-08
+  hidden linearVelocity_0 -0.0043369575804883195 -0.04000775370363523 0.0002058369294259881
+  hidden angularVelocity_0 0.1040673779610999 -0.01415500561335744 -0.10716419284466175
+  hidden rotation_1 0 0.9999999999999999 0 7.884953353001448e-08
+  hidden position_1_0 5.784592461963147e-06
+  hidden position_1_1 -1.765640197095497e-05
+  hidden linearVelocity_1 -0.003592835803572645 -0.03384322395703131 0.00011113271141434885
+  hidden angularVelocity_1 0.10406788627272928 -0.01415464045312513 -0.1071643210051057
+  hidden rotation_2 0 0 0.9999999999999999 5.784568590984624e-06
+  hidden position_2_0 0.0054444353640419295
+  hidden linearVelocity_2 -0.0012789381795322548 -0.03196015476289999 0.0022407713678802422
+  hidden angularVelocity_2 0.10407580470698537 -0.014129911054211387 -0.10722117631994403
+  hidden rotation_3 0 1 0 0.00544443536402543
+  hidden position_3_0 0.02334509200633301
+  hidden linearVelocity_3 -0.0013791000786782409 -0.031951226332134146 0.0022452173052638566
+  hidden angularVelocity_3 0.13298465795773856 -0.011645710983200785 -0.1061690517488174
+  hidden rotation_4 1 0 0 0.023345092006331863
+  hidden position_4_0 0.19337456028532132
+  hidden linearVelocity_4 -0.0017539153827335298 -0.031599393668109106 0.0018396088893552927
+  hidden angularVelocity_4 0.13384237229096813 -0.020138199974590078 -0.10661728319017169
+  hidden rotation_5 0 1 0 0.19337456028532246
+  hidden position_5_0 -0.09669263945110441
+  hidden linearVelocity_5 0.0017933812430894443 -0.01230604956156639 0.0031670040553476346
+  hidden angularVelocity_5 0.16787378939912592 -0.01682624398393261 -0.10464261479581499
+  hidden rotation_6 0 -1 0 0.09669263945110486
+  hidden position_6_0 -0.02334521325946783
+  hidden linearVelocity_6 0.004655444608746804 -0.0037360805803396857 0.006622567226874594
+  hidden angularVelocity_6 0.15085903077126878 -0.018470457027076462 -0.10563562885259678
+  hidden rotation_7 -1 0 0 0.023345213259465643
+  hidden linearVelocity_7 0.005392365104517454 0.0004641337283462908 0.0073677541793737015
+  hidden angularVelocity_7 0.14997000698651847 -0.010046660617508089 -0.10437264843947264
+  hidden translation_8 0.011162556864712236 1.681461395941497e-05 -0.03282526336293201
+  hidden rotation_8 -2.4723188982256947e-07 0.9999999999999241 -3.0131562401752893e-07 1.5707976993362394
+  hidden linearVelocity_8 0.004762180621007359 0.0017234684198345223 0.00648648783892152
+  hidden angularVelocity_8 0.1499697844999562 -0.010044615246956143 -0.10437668200184758
+  hidden rotation_9 0 0 -1 1.7656410987511854e-05
+  hidden position_9_0 -0.10602227041180436
+  hidden linearVelocity_9 -0.001811948945918878 -0.023373619849009042 0.0003173981287003086
+  hidden angularVelocity_9 0.10406065380091498 -0.014175206149532295 -0.10717344276186812
+  hidden rotation_10 0 -1 0 0.10602227041180512
+  hidden position_10_0 -0.023345777337148193
+  hidden linearVelocity_10 -0.0017115580946168302 -0.023379869020304735 0.0003136003129394089
+  hidden angularVelocity_10 0.08362014804540485 -0.016202285999773535 -0.10788646236390295
+  hidden rotation_11 -1 0 0 0.023345777337152658
+  hidden position_11_0 0.10000306813793969
+  hidden linearVelocity_11 -0.001987660181236229 -0.02311720766755202 2.797227019283818e-06
+  hidden angularVelocity_11 0.08279479425806122 -0.007709800969972962 -0.10840351589694788
+  hidden rotation_12 0 0.9999999999999999 0 0.10000306813794074
+  hidden position_12_0 -0.04999924411317603
+  hidden linearVelocity_12 -0.0020914906034900007 -0.012208946953769234 -0.0009314614920659242
+  hidden angularVelocity_12 0.08279139133785038 -0.00772120483395899 -0.1084032529005742
+  hidden rotation_13 0 -1 0 0.04999924411317744
+  hidden position_13_0 0.023343900802554236
+  hidden linearVelocity_13 -0.0005837609843936286 -0.007545154764265367 -0.00019505744302371526
+  hidden angularVelocity_13 0.08278811195165926 -0.00772344658980917 -0.1084026119298151
+  hidden rotation_14 1 0 0 0.02334390080255694
+  hidden linearVelocity_14 4.8350269575154066e-06 -0.005204741261929711 -0.00014725028621958897
+  hidden angularVelocity_14 0.08360606546636376 -0.01624690361093734 -0.1083125412089677
+  hidden translation_15 0.01112845901650461 -3.454736745744924e-05 -0.03286989724460203
+  hidden rotation_15 3.1662888394274473e-07 0.9999999999992009 -1.2238530047510654e-06 1.5707998600808202
+  hidden linearVelocity_15 -0.0005627283812926256 -0.004655033496967405 -0.0007495253387791621
+  hidden angularVelocity_15 0.08360084357267727 -0.016246271657074575 -0.10831299998467879
+  hidden rotation_16 0 -1 0 0.18675751034921492
+  hidden position_16_0 0.046689451550890944
+  hidden linearVelocity_16 -0.0034231717258195915 -0.05322590577691699 0.0029250083178103733
+  hidden angularVelocity_16 0.035944331503164714 -0.020844638715132396 -0.10954923213780661
+  hidden rotation_17 0 0 1 0.046689451550888945
+  hidden position_17_0 -7.562148074952603e-07
+  hidden linearVelocity_17 -0.004338859826180885 -0.05331804448233837 0.002596813656699704
+  hidden angularVelocity_17 0.03512043978521234 -0.01850445775839861 -0.09260672935446933
+  hidden rotation_18 -1 0 0 7.562981570034979e-07
+  hidden position_18_0 1.3775765366157545e-07
+  hidden linearVelocity_18 -0.009853746916864584 -0.05412841136884987 0.0006694960142479396
+  hidden angularVelocity_18 0.03511935905574747 -0.018496915481177933 -0.09260784757361722
+  hidden rotation_19 0 1 0 1.3657139822709086e-07
+  hidden position_19_0 3.695571818131035e-11
+  hidden linearVelocity_19 -0.017229711321832295 -0.05513006590568677 -0.0019227646415789692
+  hidden angularVelocity_19 0.035119512836036745 -0.018496893070417565 -0.09260784854818449
+  hidden linearVelocity_20 -0.022224910203172098 -0.056684895352798796 -0.003501067961504985
+  hidden angularVelocity_20 0.03511951283245088 -0.01849689263456554 -0.09260784849364771
+  hidden rotation_21 0 1 0 0.18675846624145942
+  hidden position_21_0 -0.046689499512624785
+  hidden linearVelocity_21 -0.005294519013827975 -0.03128104619619286 -0.0019610973191107007
+  hidden angularVelocity_21 0.17219154011702162 -0.007467837155353243 -0.10479476442999162
+  hidden rotation_22 0 0 -0.9999999999999999 0.046689499512624764
+  hidden position_22_0 7.513528077192056e-07
+  hidden linearVelocity_22 -0.006383350395544373 -0.03056920306644398 -0.0035292313800001558
+  hidden angularVelocity_22 0.17238005020760763 -0.003490659649639672 -0.12144868668278198
+  hidden rotation_23 1 0 0 7.515859730791191e-07
+  hidden position_23_0 1.0498976493865918e-07
+  hidden linearVelocity_23 -0.013322578659611697 -0.02937178700780196 -0.013414622615230668
+  hidden angularVelocity_23 0.17238050876354136 -0.0034981118885654954 -0.12145044650198071
+  hidden rotation_24 0 1 0 1.032382731180714e-07
+  hidden position_24_0 -3.759834295975885e-11
+  hidden linearVelocity_24 -0.022352013446004404 -0.026112878721625498 -0.02633166254427251
+  hidden angularVelocity_24 0.1723802985545487 -0.0034981231901749527 -0.12145045527149151
+  hidden linearVelocity_25 -0.028849626385396045 -0.024559917378108715 -0.03560810238757737
+  hidden angularVelocity_25 0.17238029861425402 -0.003498122815613654 -0.12145045506558157
+  hidden position_26_0 7.534316502092103e-10
+  hidden linearVelocity_26 -0.004358928973472561 -0.04225306608706575 0.0004821427758616977
+  hidden angularVelocity_26 0.10406739434521906 -0.01415500437728571 -0.10716431446627969
+  hidden linearVelocity_27 -0.006913205657254682 -0.05081582298196799 -0.0008612635205415797
+  hidden angularVelocity_27 0.10406739153839734 -0.014155004934839788 -0.10716431443996766
+  translation -1.338661244708397 2.1881338852307963 0.29332412868972463
+  rotation 0.04252209683610723 0.008776251161065373 -0.9990569797044703 1.4713596204264106
+  controller "hoap_controller"
+  supervisor TRUE
+}
